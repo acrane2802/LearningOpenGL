@@ -1,3 +1,6 @@
 [submodule "3rdparty/sdl2"]
 	path = 3rdparty/sdl2
 	url = https://github.com/libsdl-org/SDL
+[submodule "3rdparty/glad"]
+	path = 3rdparty/glad
+	url = https://github.com/acrane2802/glad

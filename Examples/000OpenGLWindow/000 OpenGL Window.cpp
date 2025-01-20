@@ -14,7 +14,7 @@ void render(int deltaTime);
 int main(int argc, char* args[])
 {
     // beginning variables for both naming the window and the only variable that should be changed if the program needs to be shut down.
-    const std::string title = "LearningOpenGL";
+    const std::string title = "000 OpenGL Window";
     bool isRunning = false;
 
     // set up SDL to begin its video subsystems and set the opengl attributes to avoid this program running on unsupported hardware
@@ -24,7 +24,7 @@ int main(int argc, char* args[])
     SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 3 );
     SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
 
-    // create the window pointer, beginnning around the middle of the screen with the dimension constants and the opengl flag
+    // create the window pointer, beginning around the middle of the screen with the dimension constants and the opengl flag
     SDL_Window* window = SDL_CreateWindow(title.c_str(), 800, 600, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
 
     // this could be commented out at a later date. it is here to test the function framebuffer_callback
@@ -99,7 +99,7 @@ void framebuffer_callback(SDL_Window* window, int width, int height)
 // here is where all opengl code goes that needs to be looped
 void render(int deltaTime)
 {
+    // draw the background color then clear the screen every frame
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 }
-

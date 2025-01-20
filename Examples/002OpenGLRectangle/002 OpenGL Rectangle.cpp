@@ -9,7 +9,7 @@
 #define WINDOW_WIDTH 800
 
 // useful functions that interface with SDL
-void framebuffer_callback(SDL_Window* window, int width, int height);
+void framebufferCallback(SDL_Window* window, int width, int height);
 void render(unsigned int VAO, unsigned int EBO, unsigned int shaderProgram, int deltaTime);
 
 std::string readShader(std::ifstream& file);
@@ -43,7 +43,8 @@ int main(int argc, char* args[])
     }
 
     // hand the opengl context over to SDL
-    SDL_GLContext gl_context = SDL_GL_CreateContext(window);
+    SDL_GLContext glContext = SDL_GL_CreateContext(window);
+    SDL_GL_MakeCurrent(window, glContext);
 
     // make sure all OpenGL extensions can be accessed, otherwise, close
     if(!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
@@ -71,11 +72,11 @@ int main(int argc, char* args[])
         1, 2, 3
     };
 
-    // here we generate an Element Buffer Object to make it so unique vertices are drawn but repeated vertices dont take up more resources than needed
+    // here we generate an Element Buffer Object to make it so unique vertices are drawn but repeated vertices don't take up more resources than needed
     unsigned int EBO;
     glGenBuffers(1, &EBO);
 
-    // VAOs or Vertex Array Objects store a given VBO and their necessary Vertex Attributes. This makes it so you dont have to run the VBO and VA every frame and can simply call the VAO. Modern OpenGL *Requires* this to draw.
+    // VAOs or Vertex Array Objects store a given VBO and their necessary Vertex Attributes. This makes it so you don't have to run the VBO and VA every frame and can simply call the VAO. Modern OpenGL *Requires* this to draw.
     unsigned int VAO;
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -96,7 +97,7 @@ int main(int argc, char* args[])
     // this tells opengl how the vertices are laid out in memory. the first is the array we want to configure. this is the location variable set in the vertex shader
     // the second attribute tells us the size of the vertex vector. since a vertex here is defined by xyz, it is a vec3
     // the third argument defines the vertex coordinate datatype
-    // the next specifies whether the data should be normalized (-1, 0, 1). since the data is in floats, we dont want it to be
+    // the next specifies whether the data should be normalized (-1, 0, 1). since the data is in floats, we don't want it to be
     // the next argument is the stride. it defines how far in memory to move to find the next x coordinate. in this configuration, we move 3 floats. in a different declaration, this needs to be changed
     // and the final portion requires a strange cast. it is a data offset. if this did not begin at 0, we would change this value
     // after the vertex behavior is defined, we enable the first group (location 0)
@@ -117,7 +118,7 @@ int main(int argc, char* args[])
 
     // here we attach the shader code from the file to the given id that was generated above and is attached to the GL_VERTEX_SHADER object. the "1" here tells us how many strings are being compiled.
     // Then we compile using the id
-    glShaderSource(vertexShader, 1, &vertexShaderData, NULL);
+    glShaderSource(vertexShader, 1, &vertexShaderData, 0);
     glCompileShader(vertexShader);
 
     // this creates a variable used to determine the compilation success, a char array to store the specific error, then polls opengl for the shader status, storing it in the success variable
@@ -128,7 +129,7 @@ int main(int argc, char* args[])
     // if the compilation fails, it retrieves the error, stores it in the array, then prints it out
     if(!success)
     {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        glGetShaderInfoLog(vertexShader, 512, 0, infoLog);
         std::cout << "Vertex Shader failed to compile!\n" << infoLog << std::endl;
     }
 
@@ -143,16 +144,16 @@ int main(int argc, char* args[])
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 
     // linking the shader data and the shader id then compiling
-    glShaderSource(fragmentShader, 1, &fragmentShaderData, NULL);
+    glShaderSource(fragmentShader, 1, &fragmentShaderData, 0);
     glCompileShader(fragmentShader);
 
     // once again, get status of the shader compilation for fragment
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
 
-    // verify if the compilation is successful. if it isnt, print out an error
+    // verify if the compilation is successful. if it isn't, print out an error
     if(!success)
     {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        glGetShaderInfoLog(fragmentShader, 512, 0, infoLog);
         std::cout << "Fragment Shader failed to compile!\n" << infoLog << std::endl;
     }
 
@@ -171,7 +172,7 @@ int main(int argc, char* args[])
 
     if(!success)
     {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        glGetProgramInfoLog(shaderProgram, 512, 0, infoLog);
         std::cout << "Shader Program failed to link!\n" << infoLog << std::endl;
     }
 
@@ -195,7 +196,7 @@ int main(int argc, char* args[])
                 case SDL_WINDOWEVENT:
                     if(e.window.event == SDL_WINDOWEVENT_RESIZED)
                     {
-                        framebuffer_callback(window, SDL_GetWindowSurface(window)->w,  SDL_GetWindowSurface(window)->h);
+                        framebufferCallback(window, SDL_GetWindowSurface(window)->w,  SDL_GetWindowSurface(window)->h);
                     }
                     break;
                 case SDL_KEYDOWN:
@@ -203,8 +204,6 @@ int main(int argc, char* args[])
                     {
                         case SDLK_ESCAPE:
                             isRunning = false;
-                            return 0;
-                        break;
                         default:
                             break;
                     }
@@ -223,7 +222,7 @@ int main(int argc, char* args[])
 }
 
 // this resizes the viewport so opengl can adapt dynamically
-void framebuffer_callback(SDL_Window* window, int width, int height)
+void framebufferCallback(SDL_Window* window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }

@@ -7,7 +7,7 @@
 #define WINDOW_WIDTH 800
 
 // useful functions that interface with SDL
-void framebuffer_callback(SDL_Window* window, int width, int height);
+void framebufferCallback(SDL_Window* window, int width, int height);
 void render(int deltaTime);
 
 // arguments in main are required so SDL_main doesn't cause compilation issues
@@ -39,7 +39,8 @@ int main(int argc, char* args[])
     }
 
     // hand the opengl context over to SDL
-    SDL_GLContext gl_context = SDL_GL_CreateContext(window);
+    SDL_GLContext glContext = SDL_GL_CreateContext(window);
+    SDL_GL_MakeCurrent(window, glContext);
 
     // make sure all OpenGL extensions can be accessed, otherwise, close
     if(!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
@@ -66,7 +67,7 @@ int main(int argc, char* args[])
                 case SDL_WINDOWEVENT:
                     if(e.window.event == SDL_WINDOWEVENT_RESIZED)
                     {
-                        framebuffer_callback(window, SDL_GetWindowSurface(window)->w,  SDL_GetWindowSurface(window)->h);
+                        framebufferCallback(window, SDL_GetWindowSurface(window)->w,  SDL_GetWindowSurface(window)->h);
                     }
                     break;
                 case SDL_KEYDOWN:
@@ -74,8 +75,7 @@ int main(int argc, char* args[])
                     {
                         case SDLK_ESCAPE:
                             isRunning = false;
-                            return 0;
-                        break;
+                            break;
                         default:
                             break;
                     }
@@ -94,7 +94,7 @@ int main(int argc, char* args[])
 }
 
 // this resizes the viewport so opengl can adapt dynamically
-void framebuffer_callback(SDL_Window* window, int width, int height)
+void framebufferCallback(SDL_Window* window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }

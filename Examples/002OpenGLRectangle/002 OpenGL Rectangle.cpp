@@ -192,8 +192,11 @@ int main(int argc, char* args[])
                 case SDL_QUIT:
                     isRunning = false;
                     break;
-                case SDL_WINDOWEVENT_RESIZED:
-                    framebuffer_callback(window, SDL_GetWindowSurface(window)->w,  SDL_GetWindowSurface(window)->h);
+                case SDL_WINDOWEVENT:
+                    if(e.window.event == SDL_WINDOWEVENT_RESIZED)
+                    {
+                        framebuffer_callback(window, SDL_GetWindowSurface(window)->w,  SDL_GetWindowSurface(window)->h);
+                    }
                     break;
                 case SDL_KEYDOWN:
                     switch(e.key.keysym.sym)

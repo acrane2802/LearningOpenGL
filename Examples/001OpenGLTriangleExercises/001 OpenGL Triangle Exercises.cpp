@@ -59,9 +59,16 @@ int main(int argc, char* args[])
 
     // array of vertices
     float vertices[] = {
-        -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-        0.0f, 0.5f, 0.0f
+        -0.75f, -0.5f, 0.0f,
+        0.25f, -0.5f, 0.0f,
+        -0.25f, 0.5f, 0.0f
+    };
+
+    // second set of vertices
+    float vertices2[] = {
+        -0.25f, -0.5f, 0.0f,
+        0.75f, -0.5f, 0.0f,
+        0.25f, 0.5f, 0.0f
     };
 
     // VAOs or Vertex Array Objects store a given VBO and their necessary Vertex Attributes. This makes it so you don't have to run the VBO and VA every frame and can simply call the VAO. Modern OpenGL *Requires* this to draw.
@@ -86,6 +93,20 @@ int main(int argc, char* args[])
     // after the vertex behavior is defined, we enable the first group (location 0)
 
     // which vbo this uses is determined by whichever VBO is bound to the context, if a new vbo is laid out differently, we need to run this again
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(0));
+    glEnableVertexAttribArray(0);
+
+    // this is another VAO and VBO to make a second triangle. this has to be done after the previous because only one can be bound at a time
+    unsigned int VAO2;
+    glGenVertexArrays(1, &VAO2);
+    glBindVertexArray(VAO2);
+
+    unsigned int VBO2;
+    glGenBuffers(1, &VBO2);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO2);
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
+
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(0));
     glEnableVertexAttribArray(0);
 
@@ -140,6 +161,57 @@ int main(int argc, char* args[])
         std::cout << "Fragment Shader failed to compile!\n" << infoLog << std::endl;
     }
 
+
+    // This code and its comments are copied from above to make another set of shaders and programs
+    // open the shader file and read the data into a string for runtime compilation then convert into a c style string
+    std::ifstream vertexShaderFile2;
+    vertexShaderFile2.open("./assets/shaders/triangle_exercises_vertex_shader.glsl");
+    std::string vertexShaderSource2 = readShader(vertexShaderFile2);
+    const char* vertexShaderData2 = vertexShaderSource2.c_str();
+
+    // all opengl objects need an id so we create one and assign it to a vertex object
+    unsigned int vertexShader2;
+    vertexShader2 = glCreateShader(GL_VERTEX_SHADER);
+
+    // here we attach the shader code from the file to the given id that was generated above and is attached to the GL_VERTEX_SHADER object. the "1" here tells us how many strings are being compiled.
+    // Then we compile using the id
+    glShaderSource(vertexShader2, 1, &vertexShaderData2, nullptr);
+    glCompileShader(vertexShader2);
+
+    // this creates a variable used to determine the compilation success, a char array to store the specific error, then polls opengl for the shader status, storing it in the success variable
+    glGetShaderiv(vertexShader2, GL_COMPILE_STATUS, &success);
+
+    // if the compilation fails, it retrieves the error, stores it in the array, then prints it out
+    if(!success)
+    {
+        glGetShaderInfoLog(vertexShader2, 512, nullptr, infoLog);
+        std::cout << "Vertex Shader 2 failed to compile!\n" << infoLog << std::endl;
+    }
+
+    // repeating the same steps as before, reading in the shader data into a const char* c style string
+    std::ifstream fragmentShaderFile2;
+    fragmentShaderFile2.open("./assets/shaders/triangle_exercises_fragment_shader.glsl");
+    std::string fragmentShaderSource2 = readShader(fragmentShaderFile2);
+    const char* fragmentShaderData2 = fragmentShaderSource2.c_str();
+
+    // assigning the shader an id and then creating it
+    unsigned int fragmentShader2;
+    fragmentShader2 = glCreateShader(GL_FRAGMENT_SHADER);
+
+    // linking the shader data and the shader id then compiling
+    glShaderSource(fragmentShader2, 1, &fragmentShaderData2, nullptr);
+    glCompileShader(fragmentShader2);
+
+    // once again, get status of the shader compilation for fragment
+    glGetShaderiv(fragmentShader2, GL_COMPILE_STATUS, &success);
+
+    // verify if the compilation is successful. if it isn't, print out an error
+    if(!success)
+    {
+        glGetShaderInfoLog(fragmentShader2, 512, nullptr, infoLog);
+        std::cout << "Fragment Shader 2 failed to compile!\n" << infoLog << std::endl;
+    }
+
     // create a shader program id and link it to a shader program object. a shader program can be shared across multiple objects or be recreated per object. recreating it is expensive so share as much as you can
     // the shader program links all the shaders of an object together and also links their individual inputs and outputs
     unsigned int shaderProgram;
@@ -165,6 +237,32 @@ int main(int argc, char* args[])
     // we can clear the shader objects we made as they have been copied into the shader program
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+
+
+    // this code is copied to make a second shader program
+    unsigned int shaderProgram2;
+    shaderProgram2 = glCreateProgram();
+
+    // here we set which program gets which shaders, then we link it to the context here
+    glAttachShader(shaderProgram2, vertexShader2);
+    glAttachShader(shaderProgram2, fragmentShader2);
+    glLinkProgram(shaderProgram2);
+
+    // check the program status, then print an error if it fails
+    glGetProgramiv(shaderProgram2, GL_LINK_STATUS, &success);
+
+    if(!success)
+    {
+        glGetProgramInfoLog(shaderProgram2, 512, nullptr, infoLog);
+        std::cout << "Shader Program 2 failed to link!\n" << infoLog << std::endl;
+    }
+
+    // once compilation is done, and linking finishes, we bind the shader program to the gl context we set up to be used for our vbo. all rendering calls after this use this program
+    glUseProgram(shaderProgram2);
+
+    // we can clear the shader objects we made as they have been copied into the shader program
+    glDeleteShader(vertexShader2);
+    glDeleteShader(fragmentShader2);
 
     // while(running) loop is for all rendering and OpenGL code. while(poll) is specifically for window events and input.
     while(isRunning)
@@ -205,6 +303,13 @@ int main(int argc, char* args[])
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
+        glBindVertexArray(0);
+
+        // render two VBOs, VAOs, and use separate shaders
+        glUseProgram(shaderProgram2);
+        glBindVertexArray(VAO2);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glBindVertexArray(0);
 
         // swap the SDL front and back buffers
         SDL_GL_SwapWindow(window);

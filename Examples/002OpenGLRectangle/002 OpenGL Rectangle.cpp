@@ -10,7 +10,6 @@
 
 // useful functions that interface with SDL
 void framebufferCallback(SDL_Window* window, int width, int height);
-void render(unsigned int VAO, unsigned int EBO, unsigned int shaderProgram, int deltaTime);
 
 std::string readShader(std::ifstream& file);
 
@@ -118,7 +117,7 @@ int main(int argc, char* args[])
 
     // here we attach the shader code from the file to the given id that was generated above and is attached to the GL_VERTEX_SHADER object. the "1" here tells us how many strings are being compiled.
     // Then we compile using the id
-    glShaderSource(vertexShader, 1, &vertexShaderData, 0);
+    glShaderSource(vertexShader, 1, &vertexShaderData, nullptr);
     glCompileShader(vertexShader);
 
     // this creates a variable used to determine the compilation success, a char array to store the specific error, then polls opengl for the shader status, storing it in the success variable
@@ -129,7 +128,7 @@ int main(int argc, char* args[])
     // if the compilation fails, it retrieves the error, stores it in the array, then prints it out
     if(!success)
     {
-        glGetShaderInfoLog(vertexShader, 512, 0, infoLog);
+        glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
         std::cout << "Vertex Shader failed to compile!\n" << infoLog << std::endl;
     }
 
@@ -144,7 +143,7 @@ int main(int argc, char* args[])
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 
     // linking the shader data and the shader id then compiling
-    glShaderSource(fragmentShader, 1, &fragmentShaderData, 0);
+    glShaderSource(fragmentShader, 1, &fragmentShaderData, nullptr);
     glCompileShader(fragmentShader);
 
     // once again, get status of the shader compilation for fragment
@@ -153,7 +152,7 @@ int main(int argc, char* args[])
     // verify if the compilation is successful. if it isn't, print out an error
     if(!success)
     {
-        glGetShaderInfoLog(fragmentShader, 512, 0, infoLog);
+        glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
         std::cout << "Fragment Shader failed to compile!\n" << infoLog << std::endl;
     }
 
@@ -172,7 +171,7 @@ int main(int argc, char* args[])
 
     if(!success)
     {
-        glGetProgramInfoLog(shaderProgram, 512, 0, infoLog);
+        glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
         std::cout << "Shader Program failed to link!\n" << infoLog << std::endl;
     }
 
@@ -212,8 +211,20 @@ int main(int argc, char* args[])
                     break;
             }
         }
-        // here are the openGL commands, deltaTime is currently unused but will be needed later
-        render(VAO, EBO, shaderProgram, 0);
+        // here are the openGL commands
+        // draw the background color then clear the screen every frame
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        // use the shader program, bind the VAO with references to the VBO, EBO, and vertex attributes
+        // then we run the draw command with the drawing mode, the number of elements to draw (6 indices so 6 vertices), then indices data type, and the offset which is 0 given our location begins at 0
+        // we also bind the vertex array at the end to 0 to avoid issues when making draw calls without data to draw, rebinding on the next loop
+        glUseProgram(shaderProgram);
+        glBindVertexArray(VAO);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+
+        // swap the SDL front and back buffers
         SDL_GL_SwapWindow(window);
     }
 
@@ -225,22 +236,6 @@ int main(int argc, char* args[])
 void framebufferCallback(SDL_Window* window, int width, int height)
 {
     glViewport(0, 0, width, height);
-}
-
-// here is where all opengl code goes that needs to be looped
-void render(unsigned int VAO, unsigned int EBO, unsigned int shaderProgram, int deltaTime)
-{
-    // draw the background color then clear the screen every frame
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    // use the shader program, bind the VAO with references to the VBO, EBO, and vertex attributes
-    // then we run the draw command with the drawing mode, the number of elements to draw (6 indices so 6 vertices), then indices data type, and the offset which is 0 given our location begins at 0
-    // we also bind the vertex array at the end to 0 to avoid issues when making draw calls without data to draw, rebinding on the next loop
-    glUseProgram(shaderProgram);
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
 }
 
 std::string readShader(std::ifstream& file)

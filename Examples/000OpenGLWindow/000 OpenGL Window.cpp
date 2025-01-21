@@ -8,7 +8,6 @@
 
 // useful functions that interface with SDL
 void framebufferCallback(SDL_Window* window, int width, int height);
-void render(int deltaTime);
 
 // arguments in main are required so SDL_main doesn't cause compilation issues
 int main(int argc, char* args[])
@@ -84,8 +83,12 @@ int main(int argc, char* args[])
                     break;
             }
         }
-        // here are the openGL commands, deltaTime is currently unused but will be needed later
-        render(0);
+        // here are the openGL commands
+        // draw the background color then clear the screen every frame
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        // swap the SDL front and back buffers
         SDL_GL_SwapWindow(window);
     }
 
@@ -97,12 +100,4 @@ int main(int argc, char* args[])
 void framebufferCallback(SDL_Window* window, int width, int height)
 {
     glViewport(0, 0, width, height);
-}
-
-// here is where all opengl code goes that needs to be looped
-void render(int deltaTime)
-{
-    // draw the background color then clear the screen every frame
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
 }

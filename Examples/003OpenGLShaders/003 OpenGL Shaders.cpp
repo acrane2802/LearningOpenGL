@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <cmath>
 #include <glad/glad.h>
 #include <SDL.h>
 
@@ -17,7 +18,7 @@ std::string readShader(std::ifstream& file);
 int main(int argc, char* args[])
 {
     // beginning variables for both naming the window and the only variable that should be changed if the program needs to be shut down.
-    const std::string title = "002 OpenGL Rectangle";
+    const std::string title = "001 OpenGL Triangle";
     bool isRunning = false;
 
     // set up SDL to begin its video subsystems and set the opengl attributes to avoid this program running on unsupported hardware
@@ -59,21 +60,10 @@ int main(int argc, char* args[])
 
     // array of vertices
     float vertices[] = {
-        0.5f, 0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
         -0.5f, -0.5f, 0.0f,
-        -0.5f, 0.5f, 0.0f
+        0.5f, -0.5f, 0.0f,
+        0.0f, 0.5f, 0.0f
     };
-
-    // this is a set of indices to tell us when to draw which vertex
-    unsigned int indices[] = {
-        0, 1, 3,
-        1, 2, 3
-    };
-
-    // here we generate an Element Buffer Object to make it so unique vertices are drawn but repeated vertices don't take up more resources than needed
-    unsigned int EBO;
-    glGenBuffers(1, &EBO);
 
     // VAOs or Vertex Array Objects store a given VBO and their necessary Vertex Attributes. This makes it so you don't have to run the VBO and VA every frame and can simply call the VAO. Modern OpenGL *Requires* this to draw.
     unsigned int VAO;
@@ -87,11 +77,6 @@ int main(int argc, char* args[])
 
     // this function takes in the buffer type that is currently bound, the size of the data in bytes, the pointer to the first data of the array, and the way the data is used. GL_STATIC_DRAW is read once, use everywhere
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    // refer to the VBO version of this below on how the function works
-    // you have to bind the indices after the vertices, otherwise opengl will crash
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // this tells opengl how the vertices are laid out in memory. the first is the array we want to configure. this is the location variable set in the vertex shader
     // the second attribute tells us the size of the vertex vector. since a vertex here is defined by xyz, it is a vec3
@@ -107,7 +92,7 @@ int main(int argc, char* args[])
 
     // open the shader file and read the data into a string for runtime compilation then convert into a c style string
     std::ifstream vertexShaderFile;
-    vertexShaderFile.open("./assets/shaders/rectangle_vertex_shader.glsl");
+    vertexShaderFile.open("./assets/shaders/shaders_vertex_shader.glsl");
     std::string vertexShaderSource = readShader(vertexShaderFile);
     const char* vertexShaderData = vertexShaderSource.c_str();
 
@@ -134,7 +119,7 @@ int main(int argc, char* args[])
 
     // repeating the same steps as before, reading in the shader data into a const char* c style string
     std::ifstream fragmentShaderFile;
-    fragmentShaderFile.open("./assets/shaders/rectangle_fragment_shader.glsl");
+    fragmentShaderFile.open("./assets/shaders/shaders_fragment_shader.glsl");
     std::string fragmentShaderSource = readShader(fragmentShaderFile);
     const char* fragmentShaderData = fragmentShaderSource.c_str();
 
@@ -203,6 +188,7 @@ int main(int argc, char* args[])
                     {
                         case SDLK_ESCAPE:
                             isRunning = false;
+                            break;
                         default:
                             break;
                     }
@@ -216,13 +202,18 @@ int main(int argc, char* args[])
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // use the shader program, bind the VAO with references to the VBO, EBO, and vertex attributes
-        // then we run the draw command with the drawing mode, the number of elements to draw (6 indices so 6 vertices), then indices data type, and the offset which is 0 given our location begins at 0
-        // we also bind the vertex array at the end to 0 to avoid issues when making draw calls without data to draw, rebinding on the next loop
+        // get the time in seconds, then use a sine wave to smoothly transition between
+        float timeValue = SDL_GetTicks64() / 1000.0f;
+        float blueValue = (std::sin(timeValue) / 2.0f) + 0.5f;
+        // here, extract the location of a uniform set in the fragment shader in a given program. the name *must* match in the string and the glsl code
+        int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
+
+        // use the shader program, bind the VAO with references to the VBO and vertex attributes, then run the draw command, with arguments to define the starting index and the number of vertices
         glUseProgram(shaderProgram);
+        // here set the uniform's value appropriately. this is the id of the uniform, then the specific colors in rgba format
+        glUniform4f(vertexColorLocation, 0.0f, 0.0f, blueValue, 1.0f);
         glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
         // swap the SDL front and back buffers
         SDL_GL_SwapWindow(window);

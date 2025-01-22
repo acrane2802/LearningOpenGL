@@ -4,7 +4,7 @@ project(001OpenGLTriangleExercises)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXE_LINKER_FLAGS "-static")
 
-add_executable(001OpenGLTriangleExercises "001 OpenGL Triangle Exercises.cpp" ../../3rdparty/glad/src/glad.c)
+add_executable(001OpenGLTriangleExercises "001 OpenGL Triangle Exercises.cpp" ../../3rdparty/glad/src/gl.c)
 
 target_include_directories(001OpenGLTriangleExercises PRIVATE ../../3rdparty/sdl2/include ../../3rdparty/glad/include ../../3rdparty/glm)
 

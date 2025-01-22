@@ -2,7 +2,7 @@
 #include <sstream>
 #include <fstream>
 #include <cmath>
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <SDL.h>
 
 #include "Shader.h"
@@ -47,7 +47,9 @@ int main(int argc, char* args[])
     SDL_GL_MakeCurrent(window, glContext);
 
     // make sure all OpenGL extensions can be accessed, otherwise, close
-    if(!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
+    // this dangerous cast is to stay within C++ standards, but should be changed if undefined behavior occurs
+    int version = gladLoadGL(reinterpret_cast<GLADloadfunc>(SDL_GL_GetProcAddress));
+    if(version == 0)
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return EXIT_FAILURE;
@@ -83,15 +85,16 @@ int main(int argc, char* args[])
     // the third argument defines the vertex coordinate datatype
     // the next specifies whether the data should be normalized (-1, 0, 1). since the data is in floats, we don't want it to be
     // the next argument is the stride. it defines how far in memory to move to find the next x coordinates. since we have color data in the vertices we need to move ahead 6 now instead of 3
-    // and the final portion requires a void* cast. it is a data offset. if this did not begin at 0, we would change this value
+    // and the final portion is a weird data offset. this has been set to nullptr here as a 0 literal but in other instances, a reinterpret_cast to void* would be *technically* correct but ugly. This is the OpenGL API problem
     // after the vertex behavior is defined, we enable the first group (location 0)
 
     // which vbo this uses is determined by whichever VBO is bound to the context, if a new vbo is laid out differently, we need to run this again
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), static_cast<void*>(0));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
 
     // this is the same as above except we begin at the next set of 3 (location 1) and stride 6 like above. cannot static cast the offset necessary so a reinterpret cast is needed
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void *>(3 * sizeof(float)));
+    // the reinterpret_cast<void*> here is hideous and really dangerous. Be careful about undefined behavior
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
     // call a custom shader class to load the shaders and assemble the program
@@ -132,7 +135,6 @@ int main(int argc, char* args[])
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-
         // use the shader program, bind the VAO with references to the VBO and vertex attributes, then run the draw command, with arguments to define the starting index and the number of vertices
         shader.use();
         glBindVertexArray(VAO);
@@ -142,6 +144,8 @@ int main(int argc, char* args[])
         SDL_GL_SwapWindow(window);
     }
 
+    SDL_GL_DeleteContext(window);
+    SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;
 }

@@ -1,5 +1,5 @@
 #include <iostream>
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <SDL.h>
 
 // constants for window size at the beginning of the program
@@ -42,7 +42,9 @@ int main(int argc, char* args[])
     SDL_GL_MakeCurrent(window, glContext);
 
     // make sure all OpenGL extensions can be accessed, otherwise, close
-    if(!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
+    // this dangerous cast is to stay within C++ standards, but should be changed if undefined behavior occurs
+    int version = gladLoadGL(reinterpret_cast<GLADloadfunc>(SDL_GL_GetProcAddress));
+    if(version == 0)
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return EXIT_FAILURE;
@@ -92,6 +94,8 @@ int main(int argc, char* args[])
         SDL_GL_SwapWindow(window);
     }
 
+    SDL_GL_DeleteContext(window);
+    SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;
 }

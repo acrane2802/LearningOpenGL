@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <SDL.h>
 
 // constants for window size at the beginning of the program
@@ -46,7 +46,9 @@ int main(int argc, char* args[])
     SDL_GL_MakeCurrent(window, glContext);
 
     // make sure all OpenGL extensions can be accessed, otherwise, close
-    if(!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
+    // this dangerous cast is to stay within C++ standards, but should be changed if undefined behavior occurs
+    int version = gladLoadGL(reinterpret_cast<GLADloadfunc>(SDL_GL_GetProcAddress));
+    if(version == 0)
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return EXIT_FAILURE;
@@ -59,10 +61,10 @@ int main(int argc, char* args[])
 
     // array of vertices
     float vertices[] = {
-        0.5f, 0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
+         0.5f,  0.5f, 0.0f,
+         0.5f, -0.5f, 0.0f,
         -0.5f, -0.5f, 0.0f,
-        -0.5f, 0.5f, 0.0f
+        -0.5f,  0.5f, 0.0f
     };
 
     // this is a set of indices to tell us when to draw which vertex
@@ -98,11 +100,11 @@ int main(int argc, char* args[])
     // the third argument defines the vertex coordinate datatype
     // the next specifies whether the data should be normalized (-1, 0, 1). since the data is in floats, we don't want it to be
     // the next argument is the stride. it defines how far in memory to move to find the next x coordinate. in this configuration, we move 3 floats. in a different declaration, this needs to be changed
-    // and the final portion requires a strange cast. it is a data offset. if this did not begin at 0, we would change this value
+    // and the final portion is a weird data offset. this has been set to nullptr here as a 0 literal but in other instances, a reinterpret_cast to void* would be *technically* correct but ugly. This is the OpenGL API problem
     // after the vertex behavior is defined, we enable the first group (location 0)
 
     // which vbo this uses is determined by whichever VBO is bound to the context, if a new vbo is laid out differently, we need to run this again
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(0));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
 
     // open the shader file and read the data into a string for runtime compilation then convert into a c style string
@@ -219,15 +221,18 @@ int main(int argc, char* args[])
         // use the shader program, bind the VAO with references to the VBO, EBO, and vertex attributes
         // then we run the draw command with the drawing mode, the number of elements to draw (6 indices so 6 vertices), then indices data type, and the offset which is 0 given our location begins at 0
         // we also bind the vertex array at the end to 0 to avoid issues when making draw calls without data to draw, rebinding on the next loop
+        // the offset in glDrawElements is a void*. if this offset needs to be changed, it should be set to reinterpret_cast. be careful with that cast. it can cause undefined behavior
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         glBindVertexArray(0);
 
         // swap the SDL front and back buffers
         SDL_GL_SwapWindow(window);
     }
 
+    SDL_GL_DeleteContext(window);
+    SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;
 }

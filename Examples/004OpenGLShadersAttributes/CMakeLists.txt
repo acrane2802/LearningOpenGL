@@ -4,7 +4,7 @@ project(004OpenGLShadersAttributes)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXE_LINKER_FLAGS "-static")
 
-add_executable(004OpenGLShadersAttributes "004 OpenGL Shaders Attributes.cpp" "Shader.h" "Shader.cpp" ../../3rdparty/glad/src/glad.c)
+add_executable(004OpenGLShadersAttributes "004 OpenGL Shaders Attributes.cpp" "Shader.h" "Shader.cpp" ../../3rdparty/glad/src/gl.c)
 
 target_include_directories(004OpenGLShadersAttributes PRIVATE ../../3rdparty/sdl2/include ../../3rdparty/glad/include ../../3rdparty/glm)
 

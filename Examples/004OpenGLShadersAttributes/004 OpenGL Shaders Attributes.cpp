@@ -144,8 +144,8 @@ int main(int argc, char* args[])
         SDL_GL_SwapWindow(window);
     }
 
-    SDL_GL_DeleteContext(window);
     SDL_DestroyWindow(window);
+    SDL_GL_DeleteContext(window);
     SDL_Quit();
     return 0;
 }

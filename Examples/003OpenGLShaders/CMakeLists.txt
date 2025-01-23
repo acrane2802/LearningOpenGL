@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.25)
 project(003OpenGLShaders)
 
 set(CMAKE_CXX_STANDARD 17)
+if (WIN32)
+    set(CMAKE_EXE_LINKER_FLAGS "-static")
+endif(WIN32)
 
 add_executable(003OpenGLShaders "003 OpenGL Shaders.cpp" ../../3rdparty/glad/src/gl.c)
 

@@ -78,3 +78,5 @@ fabric.properties
 
 # Custom
 bin
+/.idea/LearningOpenGL.iml
+/.idea/modules.xml

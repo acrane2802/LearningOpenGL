@@ -2,7 +2,7 @@
 layout (location = 0) in vec3 aPos; // the position of the vertex attribute
 layout (location = 1) in vec3 aColor; // this is the start of the next group of vec3 data that holds the color in the array
 
-out vec3 ourColor; // the color to be passed to the fragment shader
+out vec3 outColor; // the color to be passed to the fragment shader
 
 void main()
 {

@@ -208,7 +208,7 @@ int main(int argc, char* args[])
         float timeValue = static_cast<float>(SDL_GetTicks64()) / 1000.0f;
         float blueValue = (std::sin(timeValue) / 2.0f) + 0.5f;
         // here, extract the location of a uniform set in the fragment shader in a given program. the name *must* match in the string and the glsl code
-        int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
+        int vertexColorLocation = glGetUniformLocation(shaderProgram, "outColor");
 
         // use the shader program, bind the VAO with references to the VBO and vertex attributes, then run the draw command, with arguments to define the starting index and the number of vertices
         glUseProgram(shaderProgram);

@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(3rdparty/sdl2)
 add_subdirectory(3rdparty/glm)
+
 add_subdirectory(Examples/000OpenGLWindow)
 add_subdirectory(Examples/001OpenGLTriangle)
 add_subdirectory(Examples/001OpenGLTriangleExercises)
@@ -12,3 +13,4 @@ add_subdirectory(Examples/002OpenGLRectangle)
 add_subdirectory(Examples/003OpenGLShaders)
 add_subdirectory(Examples/004OpenGLShadersAttributes)
 add_subdirectory(Examples/004OpenGLShadersAttributesExercises)
+add_subdirectory(Examples/005OpenGLTextures)

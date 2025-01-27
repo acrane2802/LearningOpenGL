@@ -60,6 +60,9 @@ int main(int argc, char* args[])
     isRunning = true;
     SDL_Event e;
 
+    // call a custom shader class to load the shaders and assemble the program
+    Shader shader("./assets/shaders/shaders_attributes_exercises_vertex_shader.glsl", "./assets/shaders/shaders_attributes_exercises_fragment_shader.glsl");
+
     // array of vertices with the color data following after it
     float vertices[] = {
         -0.5f, -0.5f, 0.0f,      1.0f, 0.0f, 0.0f,
@@ -96,9 +99,6 @@ int main(int argc, char* args[])
     // the reinterpret_cast<void*> here is hideous and really dangerous. Be careful about undefined behavior
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-
-    // call a custom shader class to load the shaders and assemble the program
-    Shader shader("./assets/shaders/shaders_attributes_exercises_vertex_shader.glsl", "./assets/shaders/shaders_attributes_exercises_fragment_shader.glsl");
 
     // while(running) loop is for all rendering and OpenGL code. while(poll) is specifically for window events and input.
     while(isRunning)

@@ -59,59 +59,6 @@ int main(int argc, char* args[])
     isRunning = true;
     SDL_Event e;
 
-    // array of vertices
-    float vertices[] = {
-        -0.75f, -0.5f, 0.0f,
-         0.25f, -0.5f, 0.0f,
-        -0.25f,  0.5f, 0.0f
-    };
-
-    // second set of vertices
-    float vertices2[] = {
-        -0.25f, -0.5f, 0.0f,
-         0.75f, -0.5f, 0.0f,
-         0.25f,  0.5f, 0.0f
-    };
-
-    // VAOs or Vertex Array Objects store a given VBO and their necessary Vertex Attributes. This makes it so you don't have to run the VBO and VA every frame and can simply call the VAO. Modern OpenGL *Requires* this to draw.
-    unsigned int VAO;
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-    // this is a vertex buffer object. it is generated using an int and an id. then it is bound to its buffer type
-    unsigned int VBO;
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-    // this function takes in the buffer type that is currently bound, the size of the data in bytes, the pointer to the first data of the array, and the way the data is used. GL_STATIC_DRAW is read once, use everywhere
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    // this tells opengl how the vertices are laid out in memory. the first is the array we want to configure. this is the location variable set in the vertex shader
-    // the second attribute tells us the size of the vertex vector. since a vertex here is defined by xyz, it is a vec3
-    // the third argument defines the vertex coordinate datatype
-    // the next specifies whether the data should be normalized (-1, 0, 1). since the data is in floats, we don't want it to be
-    // the next argument is the stride. it defines how far in memory to move to find the next x coordinate. in this configuration, we move 3 floats. in a different declaration, this needs to be changed
-    // and the final portion is a weird data offset. this has been set to nullptr here as a 0 literal but in other instances, a reinterpret_cast to void* would be *technically* correct but ugly. This is the OpenGL API problem
-    // after the vertex behavior is defined, we enable the first group (location 0)
-
-    // which vbo this uses is determined by whichever VBO is bound to the context, if a new vbo is laid out differently, we need to run this again
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-    glEnableVertexAttribArray(0);
-
-    // this is another VAO and VBO to make a second triangle. this has to be done after the previous because only one can be bound at a time
-    unsigned int VAO2;
-    glGenVertexArrays(1, &VAO2);
-    glBindVertexArray(VAO2);
-
-    unsigned int VBO2;
-    glGenBuffers(1, &VBO2);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO2);
-
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-    glEnableVertexAttribArray(0);
-
     // open the shader file and read the data into a string for runtime compilation then convert into a c style string
     std::ifstream vertexShaderFile;
     vertexShaderFile.open("./assets/shaders/triangle_vertex_shader.glsl");
@@ -163,8 +110,6 @@ int main(int argc, char* args[])
         std::cout << "Fragment Shader failed to compile!\n" << infoLog << std::endl;
     }
 
-
-    // This code and its comments are copied from above to make another set of shaders and programs
     // open the shader file and read the data into a string for runtime compilation then convert into a c style string
     std::ifstream vertexShaderFile2;
     vertexShaderFile2.open("./assets/shaders/triangle_exercises_vertex_shader.glsl");
@@ -216,55 +161,100 @@ int main(int argc, char* args[])
 
     // create a shader program id and link it to a shader program object. a shader program can be shared across multiple objects or be recreated per object. recreating it is expensive so share as much as you can
     // the shader program links all the shaders of an object together and also links their individual inputs and outputs
-    unsigned int shaderProgram;
-    shaderProgram = glCreateProgram();
+    // this has been changed to an array to avoid excess variable names
+    unsigned int shaderPrograms[2];
+    shaderPrograms[0] = glCreateProgram();
 
     // here we set which program gets which shaders, then we link it to the context here
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
+    glAttachShader(shaderPrograms[0], vertexShader);
+    glAttachShader(shaderPrograms[0], fragmentShader);
+    glLinkProgram(shaderPrograms[0]);
 
     // check the program status, then print an error if it fails
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    glGetProgramiv(shaderPrograms[0], GL_LINK_STATUS, &success);
 
     if(!success)
     {
-        glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
+        glGetProgramInfoLog(shaderPrograms[0], 512, nullptr, infoLog);
         std::cout << "Shader Program failed to link!\n" << infoLog << std::endl;
     }
 
-    // once compilation is done, and linking finishes, we bind the shader program to the gl context we set up to be used for our vbo. all rendering calls after this use this program
-    glUseProgram(shaderProgram);
-
-    // we can clear the shader objects we made as they have been copied into the shader program
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
 
     // this code is copied to make a second shader program
-    unsigned int shaderProgram2;
-    shaderProgram2 = glCreateProgram();
+    shaderPrograms[1] = glCreateProgram();
 
     // here we set which program gets which shaders, then we link it to the context here
-    glAttachShader(shaderProgram2, vertexShader2);
-    glAttachShader(shaderProgram2, fragmentShader2);
-    glLinkProgram(shaderProgram2);
+    glAttachShader(shaderPrograms[1], vertexShader2);
+    glAttachShader(shaderPrograms[1], fragmentShader2);
+    glLinkProgram(shaderPrograms[1]);
 
     // check the program status, then print an error if it fails
-    glGetProgramiv(shaderProgram2, GL_LINK_STATUS, &success);
+    glGetProgramiv(shaderPrograms[1], GL_LINK_STATUS, &success);
 
     if(!success)
     {
-        glGetProgramInfoLog(shaderProgram2, 512, nullptr, infoLog);
+        glGetProgramInfoLog(shaderPrograms[1], 512, nullptr, infoLog);
         std::cout << "Shader Program 2 failed to link!\n" << infoLog << std::endl;
     }
 
-    // once compilation is done, and linking finishes, we bind the shader program to the gl context we set up to be used for our vbo. all rendering calls after this use this program
-    glUseProgram(shaderProgram2);
-
     // we can clear the shader objects we made as they have been copied into the shader program
+    glDeleteShader(vertexShader);
     glDeleteShader(vertexShader2);
+    glDeleteShader(fragmentShader);
     glDeleteShader(fragmentShader2);
+
+    // array of vertices
+    float vertices[] = {
+        -0.75f, -0.5f, 0.0f,
+         0.25f, -0.5f, 0.0f,
+        -0.25f,  0.5f, 0.0f
+    };
+
+    // second set of vertices
+    float vertices2[] = {
+        -0.25f, -0.5f, 0.0f,
+         0.75f, -0.5f, 0.0f,
+         0.25f,  0.5f, 0.0f
+    };
+
+    // VAOs or Vertex Array Objects store a given VBO and their necessary Vertex Attributes. This makes it so you don't have to run the VBO and VA every frame and can simply call the VAO. Modern OpenGL *Requires* this to draw.
+    // this has been changed to an array to avoid excess variable names
+    unsigned int VAOs[2];
+    glGenVertexArrays(1, &VAOs[0]);
+    glBindVertexArray(VAOs[0]);
+
+    // this is a vertex buffer object. it is generated using an int and an id. then it is bound to its buffer type
+    // this has been changed to an array to avoid excess variable names
+    unsigned int VBOs[2];
+    glGenBuffers(1, &VBOs[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOs[0]);
+
+    // this function takes in the buffer type that is currently bound, the size of the data in bytes, the pointer to the first data of the array, and the way the data is used. GL_STATIC_DRAW is read once, use everywhere
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // this tells opengl how the vertices are laid out in memory. the first is the array we want to configure. this is the location variable set in the vertex shader
+    // the second attribute tells us the size of the vertex vector. since a vertex here is defined by xyz, it is a vec3
+    // the third argument defines the vertex coordinate datatype
+    // the next specifies whether the data should be normalized (-1, 0, 1). since the data is in floats, we don't want it to be
+    // the next argument is the stride. it defines how far in memory to move to find the next x coordinate. in this configuration, we move 3 floats. in a different declaration, this needs to be changed
+    // and the final portion is a weird data offset. this has been set to nullptr here as a 0 literal but in other instances, a reinterpret_cast to void* would be *technically* correct but ugly. This is the OpenGL API problem
+    // after the vertex behavior is defined, we enable the first group (location 0)
+
+    // which vbo this uses is determined by whichever VBO is bound to the context, if a new vbo is laid out differently, we need to run this again
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+    glEnableVertexAttribArray(0);
+
+    // this is another VAO and VBO to make a second triangle. this has to be done after the previous because only one can be bound at a time
+    glGenVertexArrays(1, &VAOs[1]);
+    glBindVertexArray(VAOs[1]);
+
+    glGenBuffers(1, &VBOs[1]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOs[1]);
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+    glEnableVertexAttribArray(0);
 
     // while(running) loop is for all rendering and OpenGL code. while(poll) is specifically for window events and input.
     while(isRunning)
@@ -302,16 +292,14 @@ int main(int argc, char* args[])
         glClear(GL_COLOR_BUFFER_BIT);
 
         // use the shader program, bind the VAO with references to the VBO and vertex attributes, then run the draw command, with arguments to define the starting index and the number of vertices
-        glUseProgram(shaderProgram);
-        glBindVertexArray(VAO);
+        glUseProgram(shaderPrograms[0]);
+        glBindVertexArray(VAOs[0]);
         glDrawArrays(GL_TRIANGLES, 0, 3);
-        glBindVertexArray(0);
 
         // render two VBOs, VAOs, and use separate shaders
-        glUseProgram(shaderProgram2);
-        glBindVertexArray(VAO2);
+        glUseProgram(shaderPrograms[1]);
+        glBindVertexArray(VAOs[1]);
         glDrawArrays(GL_TRIANGLES, 0, 3);
-        glBindVertexArray(0);
 
         // swap the SDL front and back buffers
         SDL_GL_SwapWindow(window);

@@ -59,54 +59,6 @@ int main(int argc, char* args[])
     isRunning = true;
     SDL_Event e;
 
-    // array of vertices
-    float vertices[] = {
-         0.5f,  0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f,
-        -0.5f, -0.5f, 0.0f,
-        -0.5f,  0.5f, 0.0f
-    };
-
-    // this is a set of indices to tell us when to draw which vertex
-    unsigned int indices[] = {
-        0, 1, 3,
-        1, 2, 3
-    };
-
-    // here we generate an Element Buffer Object to make it so unique vertices are drawn but repeated vertices don't take up more resources than needed
-    unsigned int EBO;
-    glGenBuffers(1, &EBO);
-
-    // VAOs or Vertex Array Objects store a given VBO and their necessary Vertex Attributes. This makes it so you don't have to run the VBO and VA every frame and can simply call the VAO. Modern OpenGL *Requires* this to draw.
-    unsigned int VAO;
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-    // this is a vertex buffer object. it is generated using an int and an id. then it is bound to its buffer type
-    unsigned int VBO;
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-    // this function takes in the buffer type that is currently bound, the size of the data in bytes, the pointer to the first data of the array, and the way the data is used. GL_STATIC_DRAW is read once, use everywhere
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    // refer to the VBO version of this below on how the function works
-    // you have to bind the indices after the vertices, otherwise opengl will crash
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    // this tells opengl how the vertices are laid out in memory. the first is the array we want to configure. this is the location variable set in the vertex shader
-    // the second attribute tells us the size of the vertex vector. since a vertex here is defined by xyz, it is a vec3
-    // the third argument defines the vertex coordinate datatype
-    // the next specifies whether the data should be normalized (-1, 0, 1). since the data is in floats, we don't want it to be
-    // the next argument is the stride. it defines how far in memory to move to find the next x coordinate. in this configuration, we move 3 floats. in a different declaration, this needs to be changed
-    // and the final portion is a weird data offset. this has been set to nullptr here as a 0 literal but in other instances, a reinterpret_cast to void* would be *technically* correct but ugly. This is the OpenGL API problem
-    // after the vertex behavior is defined, we enable the first group (location 0)
-
-    // which vbo this uses is determined by whichever VBO is bound to the context, if a new vbo is laid out differently, we need to run this again
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-    glEnableVertexAttribArray(0);
-
     // open the shader file and read the data into a string for runtime compilation then convert into a c style string
     std::ifstream vertexShaderFile;
     vertexShaderFile.open("./assets/shaders/rectangle_vertex_shader.glsl");
@@ -184,6 +136,54 @@ int main(int argc, char* args[])
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
+    // array of vertices
+    float vertices[] = {
+         0.5f,  0.5f, 0.0f,
+         0.5f, -0.5f, 0.0f,
+        -0.5f, -0.5f, 0.0f,
+        -0.5f,  0.5f, 0.0f
+    };
+
+    // this is a set of indices to tell us when to draw which vertex
+    unsigned int indices[] = {
+        0, 1, 3,
+        1, 2, 3
+    };
+
+    // here we generate an Element Buffer Object to make it so unique vertices are drawn but repeated vertices don't take up more resources than needed
+    unsigned int EBO;
+    glGenBuffers(1, &EBO);
+
+    // VAOs or Vertex Array Objects store a given VBO and their necessary Vertex Attributes. This makes it so you don't have to run the VBO and VA every frame and can simply call the VAO. Modern OpenGL *Requires* this to draw.
+    unsigned int VAO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    // this is a vertex buffer object. it is generated using an int and an id. then it is bound to its buffer type
+    unsigned int VBO;
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    // this function takes in the buffer type that is currently bound, the size of the data in bytes, the pointer to the first data of the array, and the way the data is used. GL_STATIC_DRAW is read once, use everywhere
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // refer to the VBO version of this below on how the function works
+    // you have to bind the indices after the vertices, otherwise opengl will crash
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    // this tells opengl how the vertices are laid out in memory. the first is the array we want to configure. this is the location variable set in the vertex shader
+    // the second attribute tells us the size of the vertex vector. since a vertex here is defined by xyz, it is a vec3
+    // the third argument defines the vertex coordinate datatype
+    // the next specifies whether the data should be normalized (-1, 0, 1). since the data is in floats, we don't want it to be
+    // the next argument is the stride. it defines how far in memory to move to find the next x coordinate. in this configuration, we move 3 floats. in a different declaration, this needs to be changed
+    // and the final portion is a weird data offset. this has been set to nullptr here as a 0 literal but in other instances, a reinterpret_cast to void* would be *technically* correct but ugly. This is the OpenGL API problem
+    // after the vertex behavior is defined, we enable the first group (location 0)
+
+    // which vbo this uses is determined by whichever VBO is bound to the context, if a new vbo is laid out differently, we need to run this again
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+    glEnableVertexAttribArray(0);
+
     // while(running) loop is for all rendering and OpenGL code. while(poll) is specifically for window events and input.
     while(isRunning)
     {
@@ -220,12 +220,10 @@ int main(int argc, char* args[])
 
         // use the shader program, bind the VAO with references to the VBO, EBO, and vertex attributes
         // then we run the draw command with the drawing mode, the number of elements to draw (6 indices so 6 vertices), then indices data type, and the offset which is 0 given our location begins at 0
-        // we also bind the vertex array at the end to 0 to avoid issues when making draw calls without data to draw, rebinding on the next loop
         // the offset in glDrawElements is a void*. if this offset needs to be changed, it should be set to reinterpret_cast. be careful with that cast. it can cause undefined behavior
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-        glBindVertexArray(0);
 
         // swap the SDL front and back buffers
         SDL_GL_SwapWindow(window);

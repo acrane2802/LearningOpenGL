@@ -258,8 +258,9 @@ int main(int argc, char* args[])
         // rotation has to occur after translation, otherwise the rotation point is not adequately translated shifting the origin
         // we set up a quaternion using the glm::angleAxis which takes the degrees of rotation and the axis to rotate around in space
         // then we cast it to a mat4 so it can be combined into the final transformation matrix
-        glm::quat rotation = glm::angleAxis(glm::radians(static_cast<float>(SDL_GetTicks64()) / 10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        glm::mat4 rotationMatrix = glm::mat4_cast(rotation);
+        float rotation = glm::radians(static_cast<float>(SDL_GetTicks64()) / 10.0f);
+        glm::quat rotationQuat = glm::angleAxis(rotation, glm::vec3(0.0f, 0.0f, 1.0f));
+        glm::mat4 rotationMatrix = glm::mat4_cast(rotationQuat);
 
         // here we create a scale matrix. it must first be made with an identity so when we scale it using the scale variable, it doesn't end up 0
         glm::vec3 scale(1.0f, 1.0f, 1.0f);
@@ -283,8 +284,9 @@ int main(int argc, char* args[])
         auto translationMatrix2 = glm::mat4(1.0f);
         translationMatrix2 = glm::translate(translationMatrix2, translation2);
 
-        glm::quat rotation2 = glm::angleAxis(glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        glm::mat4 rotationMatrix2 = glm::mat4_cast(rotation2);
+        float rotation2 = glm::radians(0.0f);
+        glm::quat rotationQuat2 = glm::angleAxis(rotation2, glm::vec3(0.0f, 0.0f, 1.0f));
+        glm::mat4 rotationMatrix2 = glm::mat4_cast(rotationQuat2);
 
         glm::vec3 scale2(glm::sin(static_cast<float>(SDL_GetTicks64()) / 1000.0f));
         auto scaleMatrix2 = glm::mat4(1.0f);

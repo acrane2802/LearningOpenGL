@@ -199,17 +199,8 @@ int main(int argc, char* args[])
     shader.setInt("textureColor1", 0);
     shader.setInt("textureColor2", 1);
 
-    // we create a vector 1,0,0
-    // we make a transform matrix and initialize it with an identity matrix
-    // we turn it into a proper transformation matrix by calling glm::translate and giving it the matrix and the actual transformation vector to apply
-    // we then multiply the vector by the translation matrix and apply it
-    // we print the final location
-    // glm only accepts radians for rotation so convert with glm::radians
-    /* glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
-    glm::mat4 transform = glm::mat4(1.0f);
-    transform = glm::translate(transform, glm::vec3(1.0f, 1.0f, 0.0f));
-    vec = transform * vec;
-    std::cout << vec.x << " " << vec.y << " " << vec.z << std::endl; */
+    // here we assign the shader uniform location in memory here
+    const GLint transformLocation = glGetUniformLocation(shader.ID, "transform");
 
     // while(running) loop is for all rendering and OpenGL code. while(poll) is specifically for window events and input.
     while(isRunning)
@@ -252,18 +243,28 @@ int main(int argc, char* args[])
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
 
-        // here we apply the transformation and rotate according to time
+        // here we create the translation matrix and translate it appropriately
         // we are forced to reset the matrix every frame
+        glm::vec3 translation(0.5f, -0.5f, 0.0f);
+        auto translationMatrix = glm::mat4(1.0f);
+        translationMatrix = glm::translate(translationMatrix, translation);
+
         // rotation has to occur after translation, otherwise the rotation point is not adequately translated shifting the origin
-        glm::mat4 transform = glm::mat4(1.0f);
-        transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
-        transform = glm::rotate(transform, (SDL_GetTicks64() / 1000.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        // we set up a quaternion using the glm::angleAxis which takes the degrees of rotation and the axis to rotate around in space
+        // then we cast it to a mat4 so it can be combined into the final transformation matrix
+        glm::quat rotation = glm::angleAxis(glm::radians(static_cast<float>(SDL_GetTicks64()) / 10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        glm::mat4 rotationMatrix = glm::mat4_cast(rotation);
+
+        // here we create a scale matrix. it must first be made with an identity so when we scale it using the scale variable, it doesn't end up 0
+        glm::vec3 scale(1.0f, 1.0f, 1.0f);
+        auto scaleMatrix = glm::mat4(1.0f);
+        scaleMatrix = glm::scale(scaleMatrix, scale);
+
+        // here we create the final matrix to apply all our actions
+        glm::mat4 transform = translationMatrix * rotationMatrix * scaleMatrix;
 
         // use the shader program
         shader.use();
-
-        // here we assign the shader uniform location in memory here
-        unsigned int transformLocation = glGetUniformLocation(shader.ID, "transform");
 
         // we pass the transform location in shader memory, how many matrices to send, whether to transpose (swap columns and rows), and the actual matrix. glm may not store it in
         // an opengl compatible way so we use glm::value_ptr
@@ -275,10 +276,20 @@ int main(int argc, char* args[])
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
-        // here a second transform matrix is drawn, translated, and scaled according to time passing
-        glm::mat4 transform2 = glm::mat4(1.0f);
-        transform2 = glm::translate(transform2, glm::vec3(-0.5f, 0.5f, 0.0f));
-        transform2 = glm::scale(transform2, glm::vec3(glm::sin(SDL_GetTicks64() / 1000.0f)));
+        // here a second translation, rotation, and scale matrix
+        // then it is drawn with the final transform matrix
+        glm::vec3 translation2(-0.5f, 0.5f, 0.0f);
+        auto translationMatrix2 = glm::mat4(1.0f);
+        translationMatrix2 = glm::translate(translationMatrix2, translation2);
+
+        glm::quat rotation2 = glm::angleAxis(glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        glm::mat4 rotationMatrix2 = glm::mat4_cast(rotation2);
+
+        glm::vec3 scale2(glm::sin(static_cast<float>(SDL_GetTicks64()) / 1000.0f));
+        auto scaleMatrix2 = glm::mat4(1.0f);
+        scaleMatrix2 = glm::scale(scaleMatrix2, scale2);
+
+        glm::mat4 transform2 = translationMatrix2 * rotationMatrix2 * scaleMatrix2;
 
         // the new matrix is assigned to the shader data and then draw is called again to draw the same object
         glUniformMatrix4fv(transformLocation, 1, GL_FALSE, glm::value_ptr(transform2));

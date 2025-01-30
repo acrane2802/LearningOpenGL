@@ -62,14 +62,14 @@ int main(int argc, char* args[])
     SDL_Event e;
 
     // loads the shader and compiles a program
-    Shader shader("assets/shaders/textures_vertex_shader.glsl", "assets/shaders/textures_fragment_shader.glsl");
+    Shader shader("assets/shaders/textures_exercises_vertex_shader.glsl", "assets/shaders/textures_exercises_fragment_shader.glsl");
 
     // make sure the images are loaded in the right orientation
     stbi_set_flip_vertically_on_load(true);
 
     // this reads in a texture using stb_image and stores the data in these variables, with the last data being the desired channels
     int width, height, nrChannels;
-    unsigned char* imageData = stbi_load("assets/textures/wood_05_diffuse.jpg", &width, &height, &nrChannels, 0);
+    unsigned char* imageData = stbi_load("assets/textures/tile_01_diffuse.jpg", &width, &height, &nrChannels, 0);
 
 
     // here we generate a texture and bind it to the context
@@ -78,10 +78,10 @@ int main(int argc, char* args[])
     glBindTexture(GL_TEXTURE_2D, texture1);
 
     // this sets the texture parameters. s and t are equivalent to x and y
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     // this loads the image data and into an opengl-readable texture object after checking the data is valid
     // the first argument defines what bound data we're editing (GL_TEXTURE_1D and 3D unaffected here)
@@ -104,7 +104,7 @@ int main(int argc, char* args[])
     // here the data is flushed as it is loaded now
     stbi_image_free(imageData);
 
-    imageData = stbi_load("assets/textures/tile_01_diffuse.jpg", &width, &height, &nrChannels, 0);
+    imageData = stbi_load("assets/textures/awesomeface.png", &width, &height, &nrChannels, 0);
 
     // to use multiple textures, you to have to load it, generate it, bind it, set the texture parameters, generate the texture in opengl, and generate the mipmaps for each one.
     unsigned int texture2;
@@ -120,7 +120,7 @@ int main(int argc, char* args[])
     // copied from above
     if (imageData)
     {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
         glGenerateMipmap(GL_TEXTURE_2D);
     } else
     {
@@ -132,10 +132,10 @@ int main(int argc, char* args[])
 
     // array of vertices, color, and texture coordinates
     float vertices[] = {
-         0.5f,  0.5f, 0.0f,     1.0f, 0.0f, 0.0f,     1.0f, 1.0f,
-         0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f,     1.0f, 0.0f,
-        -0.5f, -0.5f, 0.0f,     0.0f, 0.0f, 1.0f,     0.0f, 0.0f,
-        -0.5f,  0.5f, 0.0f,     1.0f, 1.0f, 1.0f,     0.0f, 1.0f
+         0.5f,  0.5f, 0.0f,     1.0f, 0.0f, 0.0f,     0.5f, 0.5f,
+         0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f,     0.5f, 0.4f,
+        -0.5f, -0.5f, 0.0f,     0.0f, 0.0f, 1.0f,     0.4f, 0.4f,
+        -0.5f,  0.5f, 0.0f,     1.0f, 1.0f, 1.0f,     0.4f, 0.5f
     };
 
     // this is a set of indices to tell us when to draw which vertex
@@ -196,6 +196,7 @@ int main(int argc, char* args[])
     // we set the uniforms to their corresponding GL_TEXTURE using our class
     shader.setInt("textureColor1", 0);
     shader.setInt("textureColor2", 1);
+    shader.setFloat("mixValue", 0.2);
 
     // while(running) loop is for all rendering and OpenGL code. while(poll) is specifically for window events and input.
     while(isRunning)

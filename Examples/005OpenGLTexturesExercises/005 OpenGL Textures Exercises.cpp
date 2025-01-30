@@ -71,7 +71,6 @@ int main(int argc, char* args[])
     int width, height, nrChannels;
     unsigned char* imageData = stbi_load("assets/textures/tile_01_diffuse.jpg", &width, &height, &nrChannels, 0);
 
-
     // here we generate a texture and bind it to the context
     unsigned int texture1;
     glGenTextures(1, &texture1);

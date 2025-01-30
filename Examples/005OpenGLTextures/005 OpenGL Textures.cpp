@@ -69,8 +69,7 @@ int main(int argc, char* args[])
 
     // this reads in a texture using stb_image and stores the data in these variables, with the last data being the desired channels
     int width, height, nrChannels;
-    unsigned char* imageData = stbi_load("assets/textures/wood_05_diffuse.jpg", &width, &height, &nrChannels, 0);
-
+    unsigned char* imageData = stbi_load("assets/textures/tile_01_diffuse.jpg", &width, &height, &nrChannels, 0);
 
     // here we generate a texture and bind it to the context
     unsigned int texture1;
@@ -104,7 +103,7 @@ int main(int argc, char* args[])
     // here the data is flushed as it is loaded now
     stbi_image_free(imageData);
 
-    imageData = stbi_load("assets/textures/tile_01_diffuse.jpg", &width, &height, &nrChannels, 0);
+    imageData = stbi_load("assets/textures/awesomeface.png", &width, &height, &nrChannels, 0);
 
     // to use multiple textures, you to have to load it, generate it, bind it, set the texture parameters, generate the texture in opengl, and generate the mipmaps for each one.
     unsigned int texture2;
@@ -120,7 +119,7 @@ int main(int argc, char* args[])
     // copied from above
     if (imageData)
     {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
         glGenerateMipmap(GL_TEXTURE_2D);
     } else
     {

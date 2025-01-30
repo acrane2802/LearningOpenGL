@@ -243,6 +243,12 @@ int main(int argc, char* args[])
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
 
+        // bind the VAO with references to the VBO, EBO, and vertex attributes
+        glBindVertexArray(VAO);
+
+        // use the shader program
+        shader.use();
+
         // here we create the translation matrix and translate it appropriately
         // we are forced to reset the matrix every frame
         glm::vec3 translation(0.5f, -0.5f, 0.0f);
@@ -263,17 +269,12 @@ int main(int argc, char* args[])
         // here we create the final matrix to apply all our actions
         glm::mat4 transform = translationMatrix * rotationMatrix * scaleMatrix;
 
-        // use the shader program
-        shader.use();
-
         // we pass the transform location in shader memory, how many matrices to send, whether to transpose (swap columns and rows), and the actual matrix. glm may not store it in
         // an opengl compatible way so we use glm::value_ptr
         glUniformMatrix4fv(transformLocation, 1, GL_FALSE, glm::value_ptr(transform));
 
-        // bind the VAO with references to the VBO, EBO, and vertex attributes
         // then we run the draw command with the drawing mode, the number of elements to draw (6 indices so 6 vertices), then indices data type, and the offset which is 0 given our location begins at 0
         // the offset in glDrawElements is a void*. if this offset needs to be changed, it should be set to reinterpret_cast. be careful with that cast. it can cause undefined behavior
-        glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
         // here a second translation, rotation, and scale matrix

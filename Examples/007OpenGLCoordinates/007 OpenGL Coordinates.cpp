@@ -16,7 +16,7 @@
 #define WINDOW_WIDTH 800
 
 // useful functions that interface with SDL
-void framebufferCallback(SDL_Window* window, int width, int height);
+void framebufferCallback(int width, int height);
 
 // arguments in main are required so SDL_main doesn't cause compilation issues
 int main(int argc, char* args[])
@@ -250,7 +250,7 @@ int main(int argc, char* args[])
                 case SDL_WINDOWEVENT:
                     if(e.window.event == SDL_WINDOWEVENT_RESIZED)
                     {
-                        framebufferCallback(window, SDL_GetWindowSurface(window)->w,  SDL_GetWindowSurface(window)->h);
+                        framebufferCallback(SDL_GetWindowSurface(window)->w,  SDL_GetWindowSurface(window)->h);
                     }
                     break;
                 case SDL_KEYDOWN:
@@ -307,10 +307,12 @@ int main(int argc, char* args[])
             translationMatrix = glm::translate(translationMatrix, translation);
 
             // rotation has to occur after translation, otherwise the rotation point is not adequately translated shifting the origin
-            // we use glm::rotate on a mat4 to calculate it all
-            float rotation = glm::radians(SDL_GetTicks64() / 100.0f * (i + 5.0f));
-            auto rotationMatrix = glm::mat4(1.0f);
-            rotationMatrix = glm::rotate(rotationMatrix, rotation, glm::vec3(0.5f, 1.0f, 0.0f));
+            // we use a quaternion to avoid gimbal lock and also normalize that quaternion to remove vertex stretching
+            float rotation = glm::radians((SDL_GetTicks64() / 1000.0f) * (static_cast<float>(i + 1) * 25.0f));
+            glm::vec3 rotationAxis = glm::vec3(0.5f, 1.0f, 0.0f);
+            glm::quat rotationQuaternion;
+            rotationQuaternion = glm::normalize(glm::angleAxis(rotation, rotationAxis));
+            glm::mat4 rotationMatrix = glm::mat4_cast(rotationQuaternion);
 
             // here we create a scale matrix. it must first be made with an identity so when we scale it using the scale variable, it doesn't end up 0
             glm::vec3 scale(1.0f, 1.0f, 1.0f);
@@ -344,7 +346,7 @@ int main(int argc, char* args[])
 }
 
 // this resizes the viewport so opengl can adapt dynamically
-void framebufferCallback(SDL_Window* window, int width, int height)
+void framebufferCallback(int width, int height)
 {
     glViewport(0, 0, width, height);
 }

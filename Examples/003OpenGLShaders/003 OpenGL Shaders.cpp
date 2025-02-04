@@ -18,7 +18,7 @@ std::string readShader(std::ifstream& file);
 int main(int argc, char* args[])
 {
     // beginning variables for both naming the window and the only variable that should be changed if the program needs to be shut down.
-    const std::string title = "001 OpenGL Triangle";
+    const std::string title = "003 OpenGL Shaders";
     bool isRunning = false;
 
     // set up SDL to begin its video subsystems and set the opengl attributes to avoid this program running on unsupported hardware

@@ -5,6 +5,9 @@
 #include <SDL.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "Shader.h"
 
@@ -19,7 +22,7 @@ void framebufferCallback(SDL_Window* window, int width, int height);
 int main(int argc, char* args[])
 {
     // beginning variables for both naming the window and the only variable that should be changed if the program needs to be shut down.
-    const std::string title = "005 OpenGL Textures Exercises";
+    const std::string title = "007 OpenGL Coordinates";
     bool isRunning = false;
 
     // set up SDL to begin its video subsystems and set the opengl attributes to avoid this program running on unsupported hardware
@@ -62,7 +65,7 @@ int main(int argc, char* args[])
     SDL_Event e;
 
     // loads the shader and compiles a program
-    Shader shader("assets/shaders/textures_exercises_vertex_shader.glsl", "assets/shaders/textures_exercises_fragment_shader.glsl");
+    Shader shader("assets/shaders/coordinates_vertex_shader.glsl", "assets/shaders/coordinates_fragment_shader.glsl");
 
     // make sure the images are loaded in the right orientation
     stbi_set_flip_vertically_on_load(true);
@@ -77,10 +80,10 @@ int main(int argc, char* args[])
     glBindTexture(GL_TEXTURE_2D, texture1);
 
     // this sets the texture parameters. s and t are equivalent to x and y
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // this loads the image data and into an opengl-readable texture object after checking the data is valid
     // the first argument defines what bound data we're editing (GL_TEXTURE_1D and 3D unaffected here)
@@ -129,23 +132,63 @@ int main(int argc, char* args[])
     // free the second bit of data
     stbi_image_free(imageData);
 
-    // array of vertices, color, and texture coordinates
     float vertices[] = {
-         0.5f,  0.5f, 0.0f,     1.0f, 0.0f, 0.0f,     0.5f, 0.5f,
-         0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f,     0.5f, 0.4f,
-        -0.5f, -0.5f, 0.0f,     0.0f, 0.0f, 1.0f,     0.4f, 0.4f,
-        -0.5f,  0.5f, 0.0f,     1.0f, 1.0f, 1.0f,     0.4f, 0.5f
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
 
-    // this is a set of indices to tell us when to draw which vertex
-    unsigned int indices[] = {
-        0, 1, 3,
-        1, 2, 3
+    glm::vec3 cubePositions[] = {
+        glm::vec3( 0.0f,  0.0f,  0.0f),
+        glm::vec3( 2.0f,  5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3( 2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f,  3.0f, -7.5f),
+        glm::vec3( 1.3f, -2.0f, -2.5f),
+        glm::vec3( 1.5f,  2.0f, -2.5f),
+        glm::vec3( 1.5f,  0.2f, -1.5f),
+        glm::vec3(-1.3f,  1.0f, -1.5f)
     };
 
-    // here we generate an Element Buffer Object to make it so unique vertices are drawn but repeated vertices don't take up more resources than needed
-    unsigned int EBO;
-    glGenBuffers(1, &EBO);
 
     // VAOs or Vertex Array Objects store a given VBO and their necessary Vertex Attributes. This makes it so you don't have to run the VBO and VA every frame and can simply call the VAO. Modern OpenGL *Requires* this to draw.
     unsigned int VAO;
@@ -160,34 +203,24 @@ int main(int argc, char* args[])
     // this function takes in the buffer type that is currently bound, the size of the data in bytes, the pointer to the first data of the array, and the way the data is used. GL_STATIC_DRAW is read once, use everywhere
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // refer to the VBO version of this below on how the function works
-    // you have to bind the indices after the vertices, otherwise opengl will crash
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
     // this tells opengl how the vertices are laid out in memory. the first is the array we want to configure. this is the location variable set in the vertex shader
     // the second attribute tells us the size of the vertex vector. since a vertex here is defined by xyz, it is a vec3
     // the third argument defines the vertex coordinate datatype
     // the next specifies whether the data should be normalized (-1, 0, 1). since the data is in floats, we don't want it to be
-    // the next argument is the stride. it defines how far in memory to move to find the next x coordinate. in this configuration, we move 8 floats due to the vertex array. in a different declaration, this needs to be changed
+    // the next argument is the stride. it defines how far in memory to move to find the next x coordinate. in this configuration, we move 5 floats due to the vertex array. in a different declaration, this needs to be changed
     // and the final portion is a weird data offset. this has been set to nullptr here as a 0 literal but in other instances, a reinterpret_cast to void* would be *technically* correct but ugly. This is the OpenGL API problem
     // after the vertex behavior is defined, we enable the first group (location 0)
 
     // which vbo this uses is determined by whichever VBO is bound to the context, if a new vbo is laid out differently, we need to run this again
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), nullptr);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
 
-    // this is the same as above except we begin at the next set of 3 (location 1) and stride 8 like above. cannot static cast the offset necessary so a reinterpret cast is needed
-    // the reinterpret_cast<void*> here is hideous and really dangerous. Be careful about undefined behavior
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    // since this is the tex coords which has only 2 data points, we set it to read 2 in the first argument and the second defines how many
-    // we stride 8 as there are 8 numbers until we hit the next set
-    // we also change the byte offset since there are 6 floats until the first coord
+    // since this is the tex coords which has only 2 data points, we set it to read location 1 in the first argument and the second defines how many
+    // we stride 5 as there are 5 numbers until we hit the next set
+    // we also change the byte offset since there are 3 floats until the first coord
     // we bind it to the VAO at another increment
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     // since we are editing the texture uniforms, we need to use the shader program before we can do that
     shader.use();
@@ -195,7 +228,14 @@ int main(int argc, char* args[])
     // we set the uniforms to their corresponding GL_TEXTURE using our class
     shader.setInt("textureColor1", 0);
     shader.setInt("textureColor2", 1);
-    shader.setFloat("mixValue", 0.2);
+
+    // here we assign the shader uniform locations in memory here
+    const GLint modelLocation = glGetUniformLocation(shader.ID, "modelMatrix");
+    const GLint projectionLocation = glGetUniformLocation(shader.ID, "projectionMatrix");
+    const GLint viewLocation = glGetUniformLocation(shader.ID, "viewMatrix");
+
+    // enable depth buffer to avoid z-fighting
+    glEnable(GL_DEPTH_TEST);
 
     // while(running) loop is for all rendering and OpenGL code. while(poll) is specifically for window events and input.
     while(isRunning)
@@ -229,8 +269,9 @@ int main(int argc, char* args[])
 
         // here are the openGL commands
         // draw the background color then clear the screen every frame
+        // we now also clear the depth buffer
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // we also bind each texture and then get the next unit and repeat. there are 16 texture units usually
         glActiveTexture(GL_TEXTURE0);
@@ -238,12 +279,55 @@ int main(int argc, char* args[])
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
 
-        // use the shader program, bind the VAO with references to the VBO, EBO, and vertex attributes
-        // then we run the draw command with the drawing mode, the number of elements to draw (6 indices so 6 vertices), then indices data type, and the offset which is 0 given our location begins at 0
-        // the offset in glDrawElements is a void*. if this offset needs to be changed, it should be set to reinterpret_cast. be careful with that cast. it can cause undefined behavior
-        shader.use();
+        // bind the VAO with references to the VBO, EBO, and vertex attributes
         glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+
+        // use the shader program
+        shader.use();
+
+        // refer to the model matrix on how this works
+        auto viewMatrix = glm::mat4(1.0f);
+        viewMatrix = glm::translate(viewMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
+
+        // this defines a fov in the first argument, the viewport's width / height, and the near and far plane distance from the camera
+        glm::mat4 projectionMatrix = glm::perspective(glm::radians(45.0f), static_cast<float>(SDL_GetWindowSurface(window)->w) / static_cast<float>(SDL_GetWindowSurface(window)->h), 0.1f, 100.0f);
+
+        // refer to the model matrix on how this works
+        glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+
+        // refer to the model matrix on how this works
+        glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+
+        for (int i = 0; i < 10; ++i)
+        {
+            // here we create the translation matrix and translate it appropriately
+            // we are forced to reset the matrix every frame
+            glm::vec3 translation(cubePositions[i]);
+            auto translationMatrix = glm::mat4(1.0f);
+            translationMatrix = glm::translate(translationMatrix, translation);
+
+            // rotation has to occur after translation, otherwise the rotation point is not adequately translated shifting the origin
+            // we use glm::rotate on a mat4 to calculate it all
+            float rotation = glm::radians(SDL_GetTicks64() / 100.0f * (i + 5.0f));
+            auto rotationMatrix = glm::mat4(1.0f);
+            rotationMatrix = glm::rotate(rotationMatrix, rotation, glm::vec3(0.5f, 1.0f, 0.0f));
+
+            // here we create a scale matrix. it must first be made with an identity so when we scale it using the scale variable, it doesn't end up 0
+            glm::vec3 scale(1.0f, 1.0f, 1.0f);
+            auto scaleMatrix = glm::mat4(1.0f);
+            scaleMatrix = glm::scale(scaleMatrix, scale);
+
+            // here we create the final matrix to apply all our actions
+            glm::mat4 modelMatrix = translationMatrix * rotationMatrix * scaleMatrix;
+
+            // we pass the transform location in shader memory, how many matrices to send, whether to transpose (swap columns and rows), and the actual matrix. glm may not store it in
+            // an opengl compatible way so we use glm::value_ptr
+            glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+        // we draw all the vertices here
+        //glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // swap the SDL front and back buffers
         SDL_GL_SwapWindow(window);
@@ -252,7 +336,6 @@ int main(int argc, char* args[])
     // here we clear all the data we are using
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
 
     SDL_DestroyWindow(window);
     SDL_GL_DeleteContext(window);

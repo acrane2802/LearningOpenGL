@@ -7,5 +7,5 @@ out vec3 outColor; // the color to be passed to the fragment shader
 void main()
 {
     gl_Position = vec4(aPos, 1.0); // declaring the position to match the vertices
-    ourColor = aColor; // this assigns a shader variable to the color retrieve from the vertices
+    outColor = aColor; // this assigns a shader variable to the color retrieve from the vertices
 }

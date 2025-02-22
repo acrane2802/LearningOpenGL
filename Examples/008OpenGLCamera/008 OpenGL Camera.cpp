@@ -4,16 +4,20 @@
 #include <glad/gl.h>
 #include <SDL3/SDL.h>
 #define STB_IMAGE_IMPLEMENTATION
+#include <chrono>
 #include <stb_image.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Shader.h"
+#include "InputHandler.h"
 
 // constants for window size at the beginning of the program
 #define WINDOW_HEIGHT 600
 #define WINDOW_WIDTH 800
+
+#define UPDATE_TIME_IN_FPS 60.0f
 
 // useful functions that interface with SDL
 void framebufferCallback(int width, int height);
@@ -22,11 +26,11 @@ void framebufferCallback(int width, int height);
 int main(int argc, char* args[])
 {
     // beginning variables for both naming the window and the only variable that should be changed if the program needs to be shut down.
-    const std::string title = "007 OpenGL Coordinates";
+    const std::string title = "008 OpenGL Camera";
     bool isRunning = false;
 
     // set up SDL to begin its video subsystems and set the opengl attributes to avoid this program running on unsupported hardware
-    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
 
     SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 3 );
     SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 3 );
@@ -62,7 +66,6 @@ int main(int argc, char* args[])
     // set viewport to the window and set the running variable to true
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     isRunning = true;
-    SDL_Event e;
 
     // loads the shader and compiles a program
     Shader shader("assets/shaders/coordinates_vertex_shader.glsl", "assets/shaders/coordinates_fragment_shader.glsl");
@@ -237,31 +240,133 @@ int main(int argc, char* args[])
     // enable depth buffer to avoid z-fighting
     glEnable(GL_DEPTH_TEST);
 
+    InputHandler input(window);
+
+    input.initialize(false);
+
+    // this is the position in world space, the target to look at, and we get the direction vector by subtracting the target from the position, creating our z-axis
+    glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+    glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+    glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+
+    float yaw = -90.0f;
+    float pitch = 0.0f;
+    float fieldOfView = 45.0f;
+
+    const float mouseSensitivity = 0.1f;
+    const float cameraSpeed = 7.5f;
+
+    bool isMaximized = false;
+
+    std::chrono::duration<double, std::milli> fixedUpdateTime = std::chrono::duration<double>(1.0 / UPDATE_TIME_IN_FPS);
+    std::chrono::time_point previousTime = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> timeSinceLastFrame(std::chrono::milliseconds(0));
+
+    SDL_SetWindowRelativeMouseMode(window, true);
+
     // while(running) loop is for all rendering and OpenGL code. while(poll) is specifically for window events and input.
     while(isRunning)
     {
-        while(SDL_PollEvent(&e))
+        auto deltaTimeInNS = std::chrono::high_resolution_clock::now() - previousTime;
+        previousTime = std::chrono::high_resolution_clock::now();
+        timeSinceLastFrame += std::chrono::duration_cast<std::chrono::milliseconds>(deltaTimeInNS);
+
+        float deltaTime = static_cast<float>(deltaTimeInNS.count()) / 1000000000.0f;
+
+        input.updateInput(isRunning);
+
+        float xOffset = input.getMouseX();
+        float yOffset = input.getMouseY();
+
+        xOffset *= mouseSensitivity;
+        yOffset *= mouseSensitivity;
+
+        yaw += xOffset;
+        pitch += yOffset;
+
+        if(pitch > 89.0f)
+            pitch = 89.0f;
+        if(pitch < -89.0f)
+            pitch = -89.0f;
+
+        glm::vec3 direction;
+        direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+        direction.y = sin(glm::radians(pitch));
+        direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+        cameraFront = glm::normalize(direction);
+
+        if (input.isKeyPressed(SDL_SCANCODE_ESCAPE))
         {
-            switch(e.type)
+            std::cout << "Escape is Pressed!\nShutting Down...\n";
+            isRunning = false;
+        }
+        if (input.isKeyHeld(SDL_SCANCODE_W))
+        {
+            cameraPos += deltaTime * cameraFront * cameraSpeed;
+        }
+        if (input.isKeyHeld(SDL_SCANCODE_S))
+        {
+            cameraPos -= deltaTime * cameraFront * cameraSpeed;
+        }
+        if (input.isKeyHeld(SDL_SCANCODE_A))
+        {
+            cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * deltaTime * cameraSpeed;
+        }
+        if (input.isKeyHeld(SDL_SCANCODE_D))
+        {
+            cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * deltaTime * cameraSpeed;
+        }
+
+        if (input.isKeyReleased(SDL_SCANCODE_SPACE))
+        {
+            std::cout << "Space Released!\n";
+        }
+
+        if (input.isJoystickButtonPressed(SDL_GAMEPAD_BUTTON_SOUTH))
+        {
+            std::cout << "A Pressed!\n";
+        }
+
+        if (input.isJoystickButtonReleased(SDL_GAMEPAD_BUTTON_EAST))
+        {
+            std::cout << "B Released!\n";
+        }
+
+        if (input.isMouseButtonHeld(SDL_BUTTON_LEFT))
+        {
+            std::cout << "Left Mouse Held!\n";
+        }
+
+        if (input.isMouseButtonPressed(SDL_BUTTON_RIGHT))
+        {
+            std::cout << "Right Mouse Pressed!\n";
+        }
+
+        if (input.isKeyPressed(SDL_SCANCODE_F11))
+        {
+            if (isMaximized)
             {
-                case SDL_EVENT_QUIT:
-                    isRunning = false;
-                    break;
-                case SDL_EVENT_WINDOW_RESIZED:
-                        framebufferCallback(SDL_GetWindowSurface(window)->w,  SDL_GetWindowSurface(window)->h);
-                    break;
-                case SDL_EVENT_KEY_DOWN:
-                    switch(e.key.key)
-                    {
-                        case SDLK_ESCAPE:
-                            isRunning = false;
-                        default:
-                            break;
-                    }
-                    break;
-                default:
-                    break;
+                SDL_MaximizeWindow(window);
             }
+            else
+            {
+                SDL_RestoreWindow(window);
+            }
+
+            isMaximized = !isMaximized;
+        }
+
+        fieldOfView -= input.getMouseScrollWheel();
+        if (fieldOfView < 1.0f)
+            fieldOfView = 1.0f;
+        if (fieldOfView > 45.0f)
+            fieldOfView = 45.0f;
+
+        while (timeSinceLastFrame >= fixedUpdateTime)
+        {
+            // fixed update
+            timeSinceLastFrame -= fixedUpdateTime;
+            //std::cout << "Fixed Update" << std::endl;
         }
 
         // here are the openGL commands
@@ -282,12 +387,11 @@ int main(int argc, char* args[])
         // use the shader program
         shader.use();
 
-        // refer to the model matrix on how this works
-        auto viewMatrix = glm::mat4(1.0f);
-        viewMatrix = glm::translate(viewMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
+        glm::mat4 viewMatrix;
+        viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
         // this defines a fov in the first argument, the viewport's width / height, and the near and far plane distance from the camera
-        glm::mat4 projectionMatrix = glm::perspective(glm::radians(45.0f), static_cast<float>(SDL_GetWindowSurface(window)->w) / static_cast<float>(SDL_GetWindowSurface(window)->h), 0.1f, 100.0f);
+        glm::mat4 projectionMatrix = glm::perspective(glm::radians(fieldOfView), static_cast<float>(SDL_GetWindowSurface(window)->w) / static_cast<float>(SDL_GetWindowSurface(window)->h), 0.1f, 100.0f);
 
         // refer to the model matrix on how this works
         glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
@@ -305,7 +409,7 @@ int main(int argc, char* args[])
 
             // rotation has to occur after translation, otherwise the rotation point is not adequately translated shifting the origin
             // we use a quaternion to avoid gimbal lock and also normalize that quaternion to remove vertex stretching
-            float rotation = glm::radians((SDL_GetTicks() / 1000.0f) * (static_cast<float>(i + 1) * 25.0f));
+            float rotation = glm::radians((static_cast<float>(SDL_GetTicks()) / 1000.0f) * (static_cast<float>(i + 1) * 25.0f));
             glm::vec3 rotationAxis = glm::vec3(0.5f, 1.0f, 0.0f);
             glm::quat rotationQuaternion;
             rotationQuaternion = glm::normalize(glm::angleAxis(rotation, rotationAxis));
@@ -340,10 +444,4 @@ int main(int argc, char* args[])
     SDL_GL_DestroyContext(glContext);
     SDL_Quit();
     return 0;
-}
-
-// this resizes the viewport so opengl can adapt dynamically
-void framebufferCallback(int width, int height)
-{
-    glViewport(0, 0, width, height);
 }

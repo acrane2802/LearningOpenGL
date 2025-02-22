@@ -1,6 +1,6 @@
 #include <iostream>
 #include <glad/gl.h>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 // constants for window size at the beginning of the program
 #define WINDOW_HEIGHT 600
@@ -24,10 +24,10 @@ int main(int argc, char* args[])
     SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
 
     // create the window pointer, beginning around the middle of the screen with the dimension constants and the opengl flag
-    SDL_Window* window = SDL_CreateWindow(title.c_str(), 800, 600, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
+    SDL_Window* window = SDL_CreateWindow(title.c_str(), WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
 
     // this could be commented out at a later date. it is here to test the function framebuffer_callback
-    SDL_SetWindowResizable(window, SDL_TRUE);
+    SDL_SetWindowResizable(window, true);
 
     // make sure window exists
     if(window == nullptr)
@@ -62,17 +62,14 @@ int main(int argc, char* args[])
         {
             switch(e.type)
             {
-                case SDL_QUIT:
+                case SDL_EVENT_QUIT:
                     isRunning = false;
                     break;
-                case SDL_WINDOWEVENT:
-                    if(e.window.event == SDL_WINDOWEVENT_RESIZED)
-                    {
-                        framebufferCallback(window, SDL_GetWindowSurface(window)->w,  SDL_GetWindowSurface(window)->h);
-                    }
+                case SDL_EVENT_WINDOW_RESIZED:
+                    framebufferCallback(window, SDL_GetWindowSurface(window)->w,  SDL_GetWindowSurface(window)->h);
                     break;
-                case SDL_KEYDOWN:
-                    switch(e.key.keysym.sym)
+                case SDL_EVENT_KEY_DOWN:
+                    switch(e.key.key)
                     {
                         case SDLK_ESCAPE:
                             isRunning = false;
@@ -95,7 +92,7 @@ int main(int argc, char* args[])
     }
 
     SDL_DestroyWindow(window);
-    SDL_GL_DeleteContext(window);
+    SDL_GL_DestroyContext(glContext);
     SDL_Quit();
     return 0;
 }

@@ -8,9 +8,9 @@ endif(WIN32)
 
 add_executable(006OpenGLTransformations "006 OpenGL Transformations.cpp" "Shader.cpp" ../../3rdparty/glad/src/gl.c)
 
-target_include_directories(006OpenGLTransformations PRIVATE ../../3rdparty/sdl2/include ../../3rdparty/glad/include ../../3rdparty/glm ../../3rdparty/stb)
+target_include_directories(006OpenGLTransformations PRIVATE ../../3rdparty/sdl/include ../../3rdparty/glad/include ../../3rdparty/glm ../../3rdparty/stb)
 
-target_link_libraries(006OpenGLTransformations PRIVATE SDL2::SDL2main SDL2::SDL2)
+target_link_libraries(006OpenGLTransformations PRIVATE SDL3::SDL3)
 
 add_custom_command(TARGET 006OpenGLTransformations PRE_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory

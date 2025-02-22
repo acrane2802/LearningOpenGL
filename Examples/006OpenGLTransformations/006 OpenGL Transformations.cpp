@@ -2,7 +2,7 @@
 #include <sstream>
 #include <fstream>
 #include <glad/gl.h>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #include <glm/glm.hpp>
@@ -33,10 +33,10 @@ int main(int argc, char* args[])
     SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
 
     // create the window pointer, beginning around the middle of the screen with the dimension constants and the opengl flag
-    SDL_Window* window = SDL_CreateWindow(title.c_str(), 800, 600, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
+    SDL_Window* window = SDL_CreateWindow(title.c_str(), WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
 
     // this could be commented out at a later date. it is here to test the function framebuffer_callback
-    SDL_SetWindowResizable(window, SDL_TRUE);
+    SDL_SetWindowResizable(window, true);
 
     // make sure window exists
     if(window == nullptr)
@@ -209,17 +209,14 @@ int main(int argc, char* args[])
         {
             switch(e.type)
             {
-                case SDL_QUIT:
+                case SDL_EVENT_QUIT:
                     isRunning = false;
                     break;
-                case SDL_WINDOWEVENT:
-                    if(e.window.event == SDL_WINDOWEVENT_RESIZED)
-                    {
+                case SDL_EVENT_WINDOW_RESIZED:
                         framebufferCallback(window, SDL_GetWindowSurface(window)->w,  SDL_GetWindowSurface(window)->h);
-                    }
                     break;
-                case SDL_KEYDOWN:
-                    switch(e.key.keysym.sym)
+                case SDL_EVENT_KEY_DOWN:
+                    switch(e.key.key)
                     {
                         case SDLK_ESCAPE:
                             isRunning = false;
@@ -258,7 +255,7 @@ int main(int argc, char* args[])
         // rotation has to occur after translation, otherwise the rotation point is not adequately translated shifting the origin
         // we set up a quaternion using the glm::angleAxis which takes the degrees of rotation and the axis to rotate around in space
         // then we cast it to a mat4 so it can be combined into the final transformation matrix
-        float rotation = glm::radians(static_cast<float>(SDL_GetTicks64()) / 10.0f);
+        float rotation = glm::radians(static_cast<float>(SDL_GetTicks()) / 10.0f);
         glm::quat rotationQuat = glm::angleAxis(rotation, glm::vec3(0.0f, 0.0f, 1.0f));
         glm::mat4 rotationMatrix = glm::mat4_cast(rotationQuat);
 
@@ -288,7 +285,7 @@ int main(int argc, char* args[])
         glm::quat rotationQuat2 = glm::angleAxis(rotation2, glm::vec3(0.0f, 0.0f, 1.0f));
         glm::mat4 rotationMatrix2 = glm::mat4_cast(rotationQuat2);
 
-        glm::vec3 scale2(glm::sin(static_cast<float>(SDL_GetTicks64()) / 1000.0f));
+        glm::vec3 scale2(glm::sin(static_cast<float>(SDL_GetTicks()) / 1000.0f));
         auto scaleMatrix2 = glm::mat4(1.0f);
         scaleMatrix2 = glm::scale(scaleMatrix2, scale2);
 
@@ -308,7 +305,7 @@ int main(int argc, char* args[])
     glDeleteBuffers(1, &EBO);
 
     SDL_DestroyWindow(window);
-    SDL_GL_DeleteContext(window);
+    SDL_GL_DestroyContext(glContext);
     SDL_Quit();
     return 0;
 }

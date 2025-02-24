@@ -241,31 +241,40 @@ int main(int argc, char* args[])
     // enable depth buffer to avoid z-fighting
     glEnable(GL_DEPTH_TEST);
 
+    // create our input handler object using the custom class
     InputHandler input(window, false);
 
+    // create our camera and set necessary data
     Camera camera;
     const float cameraSpeed = 7.5f;
     camera.setCameraSpeed(cameraSpeed);
 
+    // create a bool to toggle size
     bool isMaximized = false;
 
+    // get all the data necessary to have a fixed update loop and a non-fixed update loop
     std::chrono::duration<double, std::milli> fixedUpdateTime = std::chrono::duration<double>(1.0 / UPDATE_TIME_IN_FPS);
     std::chrono::time_point previousTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> timeSinceLastFrame(std::chrono::milliseconds(0));
 
+    // tell SDL to capture our mouse and report motion even at the window edges
     SDL_SetWindowRelativeMouseMode(window, true);
 
-    // while(running) loop is for all rendering and OpenGL code. while(poll) is specifically for window events and input.
+    // while(running) loop is for all rendering and OpenGL code
     while(isRunning)
     {
+        // get the time in nanoseconds and reset the initial time counter, then get the time since last frame in milliseconds
         auto deltaTimeInNS = std::chrono::high_resolution_clock::now() - previousTime;
         previousTime = std::chrono::high_resolution_clock::now();
         timeSinceLastFrame += std::chrono::duration_cast<std::chrono::milliseconds>(deltaTimeInNS);
 
+        // find the delta time in seconds
         float deltaTime = static_cast<float>(deltaTimeInNS.count()) / 1000000000.0f;
 
+        // continuously run our input handler
         input.updateInput(isRunning);
 
+        // camera input code
         if (input.isKeyHeld(SDL_SCANCODE_W))
         {
             camera.setCameraMovement(CAMERA_FORWARD);
@@ -282,24 +291,33 @@ int main(int argc, char* args[])
         {
             camera.setCameraMovement(CAMERA_RIGHT);
         }
-
-        camera.lockAxis(CAMERA_AXIS_Z, 0.0f, true);
+        if (input.isKeyHeld(SDL_SCANCODE_SPACE))
+        {
+            camera.setCameraMovement(CAMERA_UP);
+        }
+        if (input.isKeyHeld(SDL_SCANCODE_LCTRL))
+        {
+            camera.setCameraMovement(CAMERA_DOWN);
+        }
 
         camera.setMouseX(input.getMouseX());
         camera.setMouseY(input.getMouseY());
 
-        camera.update(deltaTime);
-
         camera.setFieldOfView(camera.getFieldOfView() - input.getMouseScrollWheel());
 
+        camera.update(deltaTime);
+
+        // check if escape is pressed. if it is close
         if (input.isKeyPressed(SDL_SCANCODE_ESCAPE))
         {
             std::cout << "Escape is Pressed!\nShutting Down...\n";
             isRunning = false;
         }
 
+        // swap between maximized and original dimensions using the bool defined earlier
         if (input.isKeyPressed(SDL_SCANCODE_F11))
         {
+            isMaximized = !isMaximized;
             if (isMaximized)
             {
                 SDL_MaximizeWindow(window);
@@ -308,10 +326,9 @@ int main(int argc, char* args[])
             {
                 SDL_RestoreWindow(window);
             }
-
-            isMaximized = !isMaximized;
         }
 
+        // here is our fixed update loop. if the time since last frame took longer than the fixed update rate, then we subtract the fixed update time until it is satisfactory
         while (timeSinceLastFrame >= fixedUpdateTime)
         {
             // fixed update
@@ -346,6 +363,7 @@ int main(int argc, char* args[])
         // refer to the model matrix on how this works
         glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 
+        // 10 is the number of cubes to draw
         for (int i = 0; i < 10; ++i)
         {
             // here we create the translation matrix and translate it appropriately
@@ -376,10 +394,9 @@ int main(int argc, char* args[])
 
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
-        // we draw all the vertices here
-        //glDrawArrays(GL_TRIANGLES, 0, 36);
-
+        // disable vsync
         // swap the SDL front and back buffers
+        SDL_GL_SetSwapInterval(0);
         SDL_GL_SwapWindow(window);
     }
 
@@ -387,6 +404,7 @@ int main(int argc, char* args[])
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
 
+    // we destroy all sdl resources
     SDL_DestroyWindow(window);
     SDL_GL_DestroyContext(glContext);
     SDL_Quit();

@@ -46,29 +46,17 @@ bool InputHandler::isKeyHeld(const int keycode) const
 
 bool InputHandler::isMouseButtonPressed(const int keycode) const
 {
-    if (mouseButtonState[keycode] == 1)
-    {
-        return true;
-    }
-    return false;
+    return previousMouseState != SDL_BUTTON_MASK(keycode) && currentMouseState == SDL_BUTTON_MASK(keycode);
 }
 
 bool InputHandler::isMouseButtonReleased(const int keycode) const
 {
-    if (mouseButtonState[keycode] == -1)
-    {
-        return true;
-    }
-    return false;
+    return previousMouseState == SDL_BUTTON_MASK(keycode) && currentMouseState != SDL_BUTTON_MASK(keycode);
 }
 
 bool InputHandler::isMouseButtonHeld(const int keycode) const
 {
-    if (mouseButtonHeld[keycode] == true)
-    {
-        return true;
-    }
-    return false;
+    return previousMouseState == SDL_BUTTON_MASK(keycode) && currentMouseState == SDL_BUTTON_MASK(keycode);
 }
 
 float InputHandler::getMouseX() const
@@ -123,7 +111,6 @@ float InputHandler::getAxis(const int axisID) const
 
 void InputHandler::updateInput(bool& isRunning)
 {
-    std::memset(mouseButtonState, 0, 10 * sizeof(*mouseButtonState));
     mouseWheel = 0.0f;
 
     std::memcpy(previousJoystickButtonState, currentJoystickButtonState, sizeof(bool) * 512);
@@ -145,41 +132,17 @@ void InputHandler::updateInput(bool& isRunning)
                 windowWidth = SDL_GetWindowSurface(m_window)->w;
                 glViewport(0, 0, windowWidth, windowHeight);
                 break;
+            case SDL_EVENT_MOUSE_WHEEL:
+                mouseWheel += e.wheel.y * mouseWheelScaler;
+                break;
             default:
                 break;
         }
-        events.push_back(e);
     }
 
     std::memcpy(previousKeyboardState, currentKeyboardState, sizeof(bool) * 512);
     std::memcpy(currentKeyboardState,SDL_GetKeyboardState(nullptr),sizeof(bool) * 512);
 
-    SDL_GetRelativeMouseState(&mouseX, &mouseY);
-
-    handleMouse();
-}
-
-void InputHandler::handleMouse()
-{
-    for (const SDL_Event & event : events)
-    {
-        mouseIndex = event.button.button;
-        switch(event.type)
-        {
-            case SDL_EVENT_MOUSE_BUTTON_DOWN:
-                mouseButtonState[mouseIndex] = 1;
-                mouseButtonHeld[mouseIndex] = true;
-            break;
-            case SDL_EVENT_MOUSE_BUTTON_UP:
-                mouseButtonState[mouseIndex] = -1;
-                mouseButtonHeld[mouseIndex] = false;
-                break;
-            case SDL_EVENT_MOUSE_WHEEL:
-                mouseWheel += event.wheel.y * mouseWheelScaler;
-                break;
-            default:
-                break;
-        }
-    }
-    events.clear();
+    previousMouseState = currentMouseState;
+    currentMouseState = SDL_GetRelativeMouseState(&mouseX, &mouseY);
 }

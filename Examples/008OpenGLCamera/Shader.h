@@ -8,8 +8,7 @@
 #include <string>
 #include <iostream>
 
-class Shader
-{
+class Shader {
 public:
 
     // shader program ID and shader file IDs

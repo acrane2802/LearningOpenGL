@@ -12,6 +12,7 @@
 
 #include "Shader.h"
 #include "InputHandler.h"
+#include "Camera.h"
 
 // constants for window size at the beginning of the program
 #define WINDOW_HEIGHT 600
@@ -240,21 +241,11 @@ int main(int argc, char* args[])
     // enable depth buffer to avoid z-fighting
     glEnable(GL_DEPTH_TEST);
 
-    InputHandler input(window);
+    InputHandler input(window, false);
 
-    input.initialize(false);
-
-    // this is the position in world space, the target to look at, and we get the direction vector by subtracting the target from the position, creating our z-axis
-    glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
-    glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-    glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
-
-    float yaw = -90.0f;
-    float pitch = 0.0f;
-    float fieldOfView = 45.0f;
-
-    const float mouseSensitivity = 0.1f;
+    Camera camera;
     const float cameraSpeed = 7.5f;
+    camera.setCameraSpeed(cameraSpeed);
 
     bool isMaximized = false;
 
@@ -275,71 +266,36 @@ int main(int argc, char* args[])
 
         input.updateInput(isRunning);
 
-        float xOffset = input.getMouseX();
-        float yOffset = input.getMouseY();
+        if (input.isKeyHeld(SDL_SCANCODE_W))
+        {
+            camera.setCameraMovement(CAMERA_FORWARD);
+        }
+        if (input.isKeyHeld(SDL_SCANCODE_S))
+        {
+            camera.setCameraMovement(CAMERA_BACKWARD);
+        }
+        if (input.isKeyHeld(SDL_SCANCODE_A))
+        {
+            camera.setCameraMovement(CAMERA_LEFT);
+        }
+        if (input.isKeyHeld(SDL_SCANCODE_D))
+        {
+            camera.setCameraMovement(CAMERA_RIGHT);
+        }
 
-        xOffset *= mouseSensitivity;
-        yOffset *= mouseSensitivity;
+        camera.lockAxis(CAMERA_AXIS_Z, 0.0f, true);
 
-        yaw += xOffset;
-        pitch += yOffset;
+        camera.setMouseX(input.getMouseX());
+        camera.setMouseY(input.getMouseY());
 
-        if(pitch > 89.0f)
-            pitch = 89.0f;
-        if(pitch < -89.0f)
-            pitch = -89.0f;
+        camera.update(deltaTime);
 
-        glm::vec3 direction;
-        direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-        direction.y = sin(glm::radians(pitch));
-        direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-        cameraFront = glm::normalize(direction);
+        camera.setFieldOfView(camera.getFieldOfView() - input.getMouseScrollWheel());
 
         if (input.isKeyPressed(SDL_SCANCODE_ESCAPE))
         {
             std::cout << "Escape is Pressed!\nShutting Down...\n";
             isRunning = false;
-        }
-        if (input.isKeyHeld(SDL_SCANCODE_W))
-        {
-            cameraPos += deltaTime * cameraFront * cameraSpeed;
-        }
-        if (input.isKeyHeld(SDL_SCANCODE_S))
-        {
-            cameraPos -= deltaTime * cameraFront * cameraSpeed;
-        }
-        if (input.isKeyHeld(SDL_SCANCODE_A))
-        {
-            cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * deltaTime * cameraSpeed;
-        }
-        if (input.isKeyHeld(SDL_SCANCODE_D))
-        {
-            cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * deltaTime * cameraSpeed;
-        }
-
-        if (input.isKeyReleased(SDL_SCANCODE_SPACE))
-        {
-            std::cout << "Space Released!\n";
-        }
-
-        if (input.isJoystickButtonPressed(SDL_GAMEPAD_BUTTON_SOUTH))
-        {
-            std::cout << "A Pressed!\n";
-        }
-
-        if (input.isJoystickButtonReleased(SDL_GAMEPAD_BUTTON_EAST))
-        {
-            std::cout << "B Released!\n";
-        }
-
-        if (input.isMouseButtonHeld(SDL_BUTTON_LEFT))
-        {
-            std::cout << "Left Mouse Held!\n";
-        }
-
-        if (input.isMouseButtonPressed(SDL_BUTTON_RIGHT))
-        {
-            std::cout << "Right Mouse Pressed!\n";
         }
 
         if (input.isKeyPressed(SDL_SCANCODE_F11))
@@ -355,12 +311,6 @@ int main(int argc, char* args[])
 
             isMaximized = !isMaximized;
         }
-
-        fieldOfView -= input.getMouseScrollWheel();
-        if (fieldOfView < 1.0f)
-            fieldOfView = 1.0f;
-        if (fieldOfView > 45.0f)
-            fieldOfView = 45.0f;
 
         while (timeSinceLastFrame >= fixedUpdateTime)
         {
@@ -387,14 +337,11 @@ int main(int argc, char* args[])
         // use the shader program
         shader.use();
 
-        glm::mat4 viewMatrix;
-        viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-
         // this defines a fov in the first argument, the viewport's width / height, and the near and far plane distance from the camera
-        glm::mat4 projectionMatrix = glm::perspective(glm::radians(fieldOfView), static_cast<float>(SDL_GetWindowSurface(window)->w) / static_cast<float>(SDL_GetWindowSurface(window)->h), 0.1f, 100.0f);
+        glm::mat4 projectionMatrix = glm::perspective(glm::radians(camera.getFieldOfView()), static_cast<float>(SDL_GetWindowSurface(window)->w) / static_cast<float>(SDL_GetWindowSurface(window)->h), 0.1f, 100.0f);
 
         // refer to the model matrix on how this works
-        glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+        glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(camera.getViewMatrix()));
 
         // refer to the model matrix on how this works
         glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));

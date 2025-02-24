@@ -5,17 +5,20 @@
 #include <iostream>
 #include <vector>
 
+#include "glm/ext/scalar_uint_sized.hpp"
+
 class InputHandler {
 
 public:
-    explicit InputHandler(SDL_Window* window) : e(), m_window(window) {};
+    explicit InputHandler(SDL_Window* window, bool useJoystick) : e(), m_window(window), m_useJoystick(useJoystick)
+    {
+        initialize(m_useJoystick);
+    };
 
     ~InputHandler()
     {
         SDL_CloseJoystick(joystick);
     };
-
-    void initialize(bool useJoystick);
 
     bool isKeyPressed(int keycode) const;
     bool isKeyReleased(int keycode) const;
@@ -39,7 +42,7 @@ public:
     void updateInput(bool& isRunning);
 
 private:
-    void handleMouse();
+    void initialize(bool useJoystick);
 
     SDL_Event e;
     std::vector<SDL_Event> events;
@@ -51,10 +54,8 @@ private:
     bool* previousKeyboardState = static_cast<bool*>(malloc(sizeof(bool) * 512));
     bool* currentKeyboardState = static_cast<bool*>(malloc(sizeof(bool) * 512));
 
-    int mouseButtonState[10] = {0};
-    bool mouseButtonHeld[10] = {false};
-
-    int mouseIndex = 0;
+    uint32_t previousMouseState = 0;
+    uint32_t currentMouseState = 0;
 
     float mouseX = 0;
     float mouseY = 0;
@@ -62,6 +63,7 @@ private:
     float mouseWheel = 0.0f;
     float mouseWheelScaler = 5.0f;
 
+    bool m_useJoystick = false;
     SDL_Joystick* joystick = nullptr;
 
     bool previousJoystickButtonState[512] = {false};

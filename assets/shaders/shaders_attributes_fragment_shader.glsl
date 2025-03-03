@@ -1,4 +1,4 @@
-#version 330 core // the OpenGL version
+#version 330 core
 out vec4 FragColor; // the final output to screen
 in vec3 outColor; // this is the color taken from the vertices in code, then saved in the shader variable
 

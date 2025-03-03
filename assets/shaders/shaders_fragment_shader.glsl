@@ -1,4 +1,4 @@
-#version 330 core // the OpenGL version
+#version 330 core
 out vec4 FragColor; // the final output to screen
 
 uniform vec4 outColor; // the input uniform we set

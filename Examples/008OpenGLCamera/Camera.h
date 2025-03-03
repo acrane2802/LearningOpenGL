@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-typedef enum CameraDirection
+enum CameraDirection
 {
     CAMERA_FORWARD = 0,
     CAMERA_BACKWARD = 1,
@@ -14,7 +14,7 @@ typedef enum CameraDirection
     CAMERA_DOWN = 5
 };
 
-typedef enum CameraAxis
+enum CameraAxis
 {
     CAMERA_AXIS_X = 0,
     CAMERA_AXIS_Y = 1,

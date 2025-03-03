@@ -16,18 +16,8 @@ add_custom_command(TARGET 006OpenGLTransformations PRE_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/assets/ $<TARGET_FILE_DIR:006OpenGLTransformations>/assets/)
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    if(WIN32)
-        add_custom_command(TARGET 006OpenGLTransformations PRE_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy
-                $<TARGET_FILE_DIR:006OpenGLTransformations>/../../3rdparty/sdl2/SDL2d.dll $<TARGET_FILE_DIR:006OpenGLTransformations>/)
-    endif()
-endif()
-
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    if(WIN32)
-        add_custom_command(TARGET 006OpenGLTransformations PRE_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy
-                $<TARGET_FILE_DIR:006OpenGLTransformations>/../../3rdparty/sdl2/SDL2.dll $<TARGET_FILE_DIR:006OpenGLTransformations>/)
-    endif()
+if(WIN32)
+    add_custom_command(TARGET 006OpenGLTransformations PRE_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+            $<TARGET_FILE_DIR:006OpenGLTransformations>/../../3rdparty/sdl/SDL3.dll $<TARGET_FILE_DIR:006OpenGLTransformations>/)
 endif()

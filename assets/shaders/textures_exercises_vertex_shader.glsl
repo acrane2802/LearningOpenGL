@@ -1,4 +1,4 @@
-#version 330 core // the OpenGL version
+#version 330 core
 layout (location = 0) in vec3 aPos; // the position of the vertex attribute
 layout (location = 1) in vec3 aColor; // this is the start of the next group of vec3 data that holds the color in the array
 layout (location = 2) in vec2 aTexCoord; // this takes in the tex coords from the vertices array

@@ -27,7 +27,7 @@ void framebufferCallback(int width, int height);
 int main(int argc, char* args[])
 {
     // beginning variables for both naming the window and the only variable that should be changed if the program needs to be shut down.
-    const std::string title = "008 OpenGL Camera";
+    const std::string title = "009 OpenGL Colors";
     bool isRunning = false;
 
     // set up SDL to begin its video subsystems and set the opengl attributes to avoid this program running on unsupported hardware
@@ -69,139 +69,64 @@ int main(int argc, char* args[])
     isRunning = true;
 
     // loads the shader and compiles a program
-    Shader shader("assets/shaders/coordinates_vertex_shader.glsl", "assets/shaders/coordinates_fragment_shader.glsl");
-
-    // make sure the images are loaded in the right orientation
-    stbi_set_flip_vertically_on_load(true);
-
-    // this reads in a texture using stb_image and stores the data in these variables, with the last data being the desired channels
-    int width, height, nrChannels;
-    unsigned char* imageData = stbi_load("assets/textures/tile_01_diffuse.jpg", &width, &height, &nrChannels, 0);
-
-    // here we generate a texture and bind it to the context
-    unsigned int texture1;
-    glGenTextures(1, &texture1);
-    glBindTexture(GL_TEXTURE_2D, texture1);
-
-    // this sets the texture parameters. s and t are equivalent to x and y
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // this loads the image data and into an opengl-readable texture object after checking the data is valid
-    // the first argument defines what bound data we're editing (GL_TEXTURE_1D and 3D unaffected here)
-    // the next argument defines tells opengl the mipmap level to use
-    // the third argument defines what colorspace to store the texture in
-    // the fourth and fifth argument tell opengl the width and height respectively of our image
-    // the next should ALWAYS be 0 due to legacy code
-    // the next two specify the colorspace of the loaded image and the datatype of the image
-    // the final points to the data itself
-    // then the mipmaps are generated
-    if (imageData)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    } else
-    {
-        std::cout << "Failed to load texture!" << std::endl;
-    }
-
-    // here the data is flushed as it is loaded now
-    stbi_image_free(imageData);
-
-    imageData = stbi_load("assets/textures/awesomeface.png", &width, &height, &nrChannels, 0);
-
-    // to use multiple textures, you to have to load it, generate it, bind it, set the texture parameters, generate the texture in opengl, and generate the mipmaps for each one.
-    unsigned int texture2;
-    glGenTextures(1, &texture2);
-    glBindTexture(GL_TEXTURE_2D, texture2);
-
-    // this sets the texture parameters. s and t are equivalent to x and y
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // copied from above
-    if (imageData)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    } else
-    {
-        std::cout << "Failed to load texture 2!" << std::endl;
-    }
-
-    // free the second bit of data
-    stbi_image_free(imageData);
+    Shader cubeShader("assets/shaders/colors_vertex_shader.glsl", "assets/shaders/colors_fragment_shader.glsl");
+    Shader lightShader("assets/shaders/colors_light_vertex_shader.glsl", "assets/shaders/colors_light_fragment_shader.glsl");
 
     float vertices[] = {
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,
+         0.5f, -0.5f, -0.5f,
+         0.5f,  0.5f, -0.5f,
+         0.5f,  0.5f, -0.5f,
+        -0.5f,  0.5f, -0.5f,
+        -0.5f, -0.5f, -0.5f,
 
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,
+         0.5f, -0.5f,  0.5f,
+         0.5f,  0.5f,  0.5f,
+         0.5f,  0.5f,  0.5f,
+        -0.5f,  0.5f,  0.5f,
+        -0.5f, -0.5f,  0.5f,
 
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,
+        -0.5f,  0.5f, -0.5f,
+        -0.5f, -0.5f, -0.5f,
+        -0.5f, -0.5f, -0.5f,
+        -0.5f, -0.5f,  0.5f,
+        -0.5f,  0.5f,  0.5f,
 
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,
+         0.5f,  0.5f, -0.5f,
+         0.5f, -0.5f, -0.5f,
+         0.5f, -0.5f, -0.5f,
+         0.5f, -0.5f,  0.5f,
+         0.5f,  0.5f,  0.5f,
 
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,
+         0.5f, -0.5f, -0.5f,
+         0.5f, -0.5f,  0.5f,
+         0.5f, -0.5f,  0.5f,
+        -0.5f, -0.5f,  0.5f,
+        -0.5f, -0.5f, -0.5f,
 
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+        -0.5f,  0.5f, -0.5f,
+         0.5f,  0.5f, -0.5f,
+         0.5f,  0.5f,  0.5f,
+         0.5f,  0.5f,  0.5f,
+        -0.5f,  0.5f,  0.5f,
+        -0.5f,  0.5f, -0.5f
     };
 
-    glm::vec3 cubePositions[] = {
-        glm::vec3( 0.0f,  0.0f,  0.0f),
-        glm::vec3( 2.0f,  5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3( 2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f,  3.0f, -7.5f),
-        glm::vec3( 1.3f, -2.0f, -2.5f),
-        glm::vec3( 1.5f,  2.0f, -2.5f),
-        glm::vec3( 1.5f,  0.2f, -1.5f),
-        glm::vec3(-1.3f,  1.0f, -1.5f)
-    };
+    glm::vec3 lightPosition(2.0f, 1.5f, -1.5f);
 
     // VAOs or Vertex Array Objects store a given VBO and their necessary Vertex Attributes. This makes it so you don't have to run the VBO and VA every frame and can simply call the VAO. Modern OpenGL *Requires* this to draw.
-    unsigned int VAO;
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
+    unsigned int cubeVAO;
+    glGenVertexArrays(1, &cubeVAO);
+    glBindVertexArray(cubeVAO);
 
     // this is a vertex buffer object. it is generated using an int and an id. then it is bound to its buffer type
-    unsigned int VBO;
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    unsigned int cubeVBO;
+    glGenBuffers(1, &cubeVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
 
     // this function takes in the buffer type that is currently bound, the size of the data in bytes, the pointer to the first data of the array, and the way the data is used. GL_STATIC_DRAW is read once, use everywhere
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -215,34 +140,24 @@ int main(int argc, char* args[])
     // after the vertex behavior is defined, we enable the first group (location 0)
 
     // which vbo this uses is determined by whichever VBO is bound to the context, if a new vbo is laid out differently, we need to run this again
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
 
-    // since this is the tex coords which has only 2 data points, we set it to read location 1 in the first argument and the second defines how many
-    // we stride 5 as there are 5 numbers until we hit the next set
-    // we also change the byte offset since there are 3 floats until the first coord
-    // we bind it to the VAO at another increment
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
+    unsigned int lightVAO;
+    glGenVertexArrays(1, &lightVAO);
+    glBindVertexArray(lightVAO);
 
-    // since we are editing the texture uniforms, we need to use the shader program before we can do that
-    shader.use();
+    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
 
-    // we set the uniforms to their corresponding GL_TEXTURE using our class
-    shader.setInt("textureColor1", 0);
-    shader.setInt("textureColor2", 1);
-
-    // here we assign the shader uniform locations in memory here
-    const GLint modelLocation = glGetUniformLocation(shader.ID, "modelMatrix");
-    const GLint projectionLocation = glGetUniformLocation(shader.ID, "projectionMatrix");
-    const GLint viewLocation = glGetUniformLocation(shader.ID, "viewMatrix");
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+    glEnableVertexAttribArray(0);
 
     // enable depth buffer to avoid z-fighting
     glEnable(GL_DEPTH_TEST);
 
     // create our input handler object using the custom class
     InputHandler input(window);
-    input.askUserIfUsingGamepad();
+    // input.askUserIfUsingGamepad();
 
     // create our camera and set necessary data
     Camera camera;
@@ -333,7 +248,7 @@ int main(int argc, char* args[])
         }
 
         // swap between maximized and original dimensions using the bool defined earlier
-        if (input.isKeyPressed(KEY_F11) || input.isGamepadButtonPressed(CONTROLLER_BUTTON_BACK))
+        if (input.isGamepadButtonPressed(CONTROLLER_BUTTON_BACK) || ((input.isKeyHeld(KEY_LALT) && input.isKeyPressed(KEY_RETURN)) || (input.isKeyHeld(KEY_RETURN) && input.isKeyPressed(KEY_LALT))))
         {
             isMaximized = !isMaximized;
             if (isMaximized)
@@ -356,61 +271,80 @@ int main(int argc, char* args[])
         // here are the openGL commands
         // draw the background color then clear the screen every frame
         // we now also clear the depth buffer
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // we also bind each texture and then get the next unit and repeat. there are 16 texture units usually
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture1);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture2);
-
-        // bind the VAO with references to the VBO, EBO, and vertex attributes
-        glBindVertexArray(VAO);
-
         // use the shader program
-        shader.use();
+        cubeShader.use();
+        cubeShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+        cubeShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
         // this defines a fov in the first argument, the viewport's width / height, and the near and far plane distance from the camera
         glm::mat4 projectionMatrix = glm::perspective(glm::radians(camera.getFieldOfView()), static_cast<float>(SDL_GetWindowSurface(window)->w) / static_cast<float>(SDL_GetWindowSurface(window)->h), 0.1f, 100.0f);
 
         // refer to the model matrix on how this works
-        glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(camera.getViewMatrix()));
+        cubeShader.setMat4("viewMatrix", camera.getViewMatrix());
+        cubeShader.setMat4("projectionMatrix", projectionMatrix);
 
-        // refer to the model matrix on how this works
-        glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+        // here we create the translation matrix and translate it appropriately
+        // we are forced to reset the matrix every frame
+        glm::vec3 cubeTranslation(0.5f, 0.0f, 0.0f);
+        auto cubeTranslationMatrix = glm::mat4(1.0f);
+        cubeTranslationMatrix = glm::translate(cubeTranslationMatrix, cubeTranslation);
 
-        // 10 is the number of cubes to draw
-        for (int i = 0; i < 10; ++i)
-        {
-            // here we create the translation matrix and translate it appropriately
-            // we are forced to reset the matrix every frame
-            glm::vec3 translation(cubePositions[i]);
-            auto translationMatrix = glm::mat4(1.0f);
-            translationMatrix = glm::translate(translationMatrix, translation);
+        // rotation has to occur after translation, otherwise the rotation point is not adequately translated shifting the origin
+        // we use a quaternion to avoid gimbal lock and also normalize that quaternion to remove vertex stretching
+        float cubeRotation = glm::radians(45.0f);
+        glm::vec3 cubeRotationAxis = glm::vec3(0.33f, 1.0f, 0.0f);
+        glm::quat cubeRotationQuaternion;
+        cubeRotationQuaternion = glm::normalize(glm::angleAxis(cubeRotation, cubeRotationAxis));
+        glm::mat4 cubeRotationMatrix = glm::mat4_cast(cubeRotationQuaternion);
 
-            // rotation has to occur after translation, otherwise the rotation point is not adequately translated shifting the origin
-            // we use a quaternion to avoid gimbal lock and also normalize that quaternion to remove vertex stretching
-            float rotation = glm::radians((static_cast<float>(SDL_GetTicks()) / 1000.0f) * (static_cast<float>(i + 1) * 25.0f));
-            glm::vec3 rotationAxis = glm::vec3(0.5f, 1.0f, 0.0f);
-            glm::quat rotationQuaternion;
-            rotationQuaternion = glm::normalize(glm::angleAxis(rotation, rotationAxis));
-            glm::mat4 rotationMatrix = glm::mat4_cast(rotationQuaternion);
+        // here we create a scale matrix. it must first be made with an identity so when we scale it using the scale variable, it doesn't end up 0
+        glm::vec3 cubeScale(1.0f, 1.0f, 1.0f);
+        auto cubeScaleMatrix = glm::mat4(1.0f);
+        cubeScaleMatrix = glm::scale(cubeScaleMatrix, cubeScale);
 
-            // here we create a scale matrix. it must first be made with an identity so when we scale it using the scale variable, it doesn't end up 0
-            glm::vec3 scale(1.0f, 1.0f, 1.0f);
-            auto scaleMatrix = glm::mat4(1.0f);
-            scaleMatrix = glm::scale(scaleMatrix, scale);
+        // here we create the final matrix to apply all our actions
+        glm::mat4 cubeModelMatrix = cubeTranslationMatrix * cubeRotationMatrix * cubeScaleMatrix;
 
-            // here we create the final matrix to apply all our actions
-            glm::mat4 modelMatrix = translationMatrix * rotationMatrix * scaleMatrix;
+        // we pass the transform location in shader memory, how many matrices to send, whether to transpose (swap columns and rows), and the actual matrix. glm may not store it in
+        // an opengl compatible way so we use glm::value_ptr
+        cubeShader.setMat4("modelMatrix", cubeModelMatrix);
 
-            // we pass the transform location in shader memory, how many matrices to send, whether to transpose (swap columns and rows), and the actual matrix. glm may not store it in
-            // an opengl compatible way so we use glm::value_ptr
-            glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+        // bind the VAO with references to the VBO, EBO, and vertex attributes
+        glBindVertexArray(cubeVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
+        lightShader.use();
+        lightShader.setMat4("viewMatrix", camera.getViewMatrix());
+        lightShader.setMat4("projectionMatrix", projectionMatrix);
+
+        glm::vec3 lightTranslation = lightPosition;
+        auto lightTranslationMatrix = glm::mat4(1.0f);
+        lightTranslationMatrix = glm::translate(lightTranslationMatrix, lightTranslation);
+
+        // rotation has to occur after translation, otherwise the rotation point is not adequately translated shifting the origin
+        // we use a quaternion to avoid gimbal lock and also normalize that quaternion to remove vertex stretching
+        float lightRotation = glm::radians(0.0f);
+        glm::vec3 lightRotationAxis = glm::vec3(0.0f, 0.0f, 0.0f);
+        glm::quat lightRotationQuaternion;
+        lightRotationQuaternion = glm::normalize(glm::angleAxis(lightRotation, lightRotationAxis));
+        glm::mat4 lightRotationMatrix = glm::mat4_cast(lightRotationQuaternion);
+
+        // here we create a scale matrix. it must first be made with an identity so when we scale it using the scale variable, it doesn't end up 0
+        glm::vec3 lightScale(0.5f, 0.5f, 0.5f);
+        auto lightScaleMatrix = glm::mat4(1.0f);
+        lightScaleMatrix = glm::scale(lightScaleMatrix, lightScale);
+
+        // here we create the final matrix to apply all our actions
+        glm::mat4 lightModelMatrix = lightTranslationMatrix * lightRotationMatrix * lightScaleMatrix;
+
+        lightShader.setMat4("modelMatrix", lightModelMatrix);
+
+        glBindVertexArray(lightVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
         // disable vsync
         // swap the SDL front and back buffers
         SDL_GL_SetSwapInterval(0);
@@ -418,8 +352,9 @@ int main(int argc, char* args[])
     }
 
     // here we clear all the data we are using
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
+    glDeleteVertexArrays(1, &cubeVAO);
+    glDeleteVertexArrays(1, &lightVAO);
+    glDeleteBuffers(1, &cubeVBO);
 
     // we destroy all sdl resources
     SDL_DestroyWindow(window);

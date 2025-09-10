@@ -15,11 +15,13 @@ if (UNIX AND APPLE)
     add_definitions(-DPLATFORM_MACOS)
 endif(UNIX AND APPLE)
 
-add_executable(008OpenGLCamera "008 OpenGL Camera.cpp" "Shader.cpp" ../../3rdparty/glad/src/gl.c
+add_executable(008OpenGLCamera "008 OpenGL Camera.cpp" "Shader.cpp" "Shader.h" ../../3rdparty/glad/src/gl.c
         InputHandler.cpp
         InputHandler.h
         Camera.cpp
-        Camera.h)
+        Camera.h
+        Scancodes.h
+)
 
 target_include_directories(008OpenGLCamera PRIVATE ../../3rdparty/sdl/include ../../3rdparty/glad/include ../../3rdparty/glm ../../3rdparty/stb )
 

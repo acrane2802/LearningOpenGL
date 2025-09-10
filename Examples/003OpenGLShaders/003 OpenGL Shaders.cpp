@@ -202,7 +202,7 @@ int main(int argc, char* args[])
         glClear(GL_COLOR_BUFFER_BIT);
 
         // get the time in seconds, then use a sine wave to smoothly transition between
-        float timeValue = static_cast<float>(SDL_GetTicks64()) / 1000.0f;
+        float timeValue = static_cast<float>(SDL_GetTicks()) / 1000.0f;
         float blueValue = (std::sin(timeValue) / 2.0f) + 0.5f;
         // here, extract the location of a uniform set in the fragment shader in a given program. the name *must* match in the string and the glsl code
         int vertexColorLocation = glGetUniformLocation(shaderProgram, "outColor");

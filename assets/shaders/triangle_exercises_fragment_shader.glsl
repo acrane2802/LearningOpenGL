@@ -1,4 +1,4 @@
-#version 330 core // the OpenGL version
+#version 330 core
 out vec4 FragColor; // the output of the final calculated color
 
 void main()

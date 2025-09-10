@@ -1,6 +1,7 @@
 #ifndef INPUTHANDLER_H
 #define INPUTHANDLER_H
 
+#include <cstring>
 #include <SDL3/SDL.h>
 #include <iostream>
 #include <vector>

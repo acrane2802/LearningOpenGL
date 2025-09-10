@@ -1,4 +1,4 @@
-#version 330 core // the OpenGL version
+#version 330
 layout (location = 0) in vec3 aPos; // the position of the vertex attribute
 
 void main()

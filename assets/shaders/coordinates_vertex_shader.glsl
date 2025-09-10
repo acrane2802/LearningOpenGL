@@ -1,4 +1,4 @@
-#version 330 core // the OpenGL version
+#version 330 core
 layout (location = 0) in vec3 aPos; // the position of the vertex attribute
 layout (location = 1) in vec2 aTexCoord; // this takes in the tex coords from the vertices array
 

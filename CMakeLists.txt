@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(3rdparty/sdl)
 add_subdirectory(3rdparty/glm)
+add_subdirectory(3rdparty/imgui)
 
 
 #set(-DSDL_OPENGLES:BOOL=OFF -DOIS_BUILD_DEMOS:BOOL=OFF -DOIS_WIN32_XINPUT_SUPPORT:BOOL=OFF)

@@ -174,10 +174,10 @@ int main(int argc, char* args[])
     bool isMaximized = false;
 
     // get all the data necessary to have a fixed update loop and a non-fixed update loop
-    std::chrono::duration<double, std::milli> fixedUpdateTime = std::chrono::duration<double>(1.0 / UPDATE_TIME_IN_FPS);
-    std::chrono::time_point previousTime = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> timeSinceLastFrame(0);
-    double deltaTime = 0.0;
+    std::chrono::duration<double, std::milli> fixedTimestep(1000.0f / UPDATE_TIME_IN_FPS);
+    std::chrono::duration<double, std::nano> frameLag(0);
+    std::chrono::time_point<std::chrono::steady_clock> currentTime = std::chrono::high_resolution_clock::now();
+    double deltaTime = 0.0f;
 
     // tell SDL to capture our mouse and report motion even at the window edges
     SDL_SetWindowRelativeMouseMode(window, true);
@@ -188,11 +188,12 @@ int main(int argc, char* args[])
     while(isRunning)
     {
         // get the time in nanoseconds and reset the initial time counter, then get the time since last frame in milliseconds
-        std::chrono::duration<double> deltaTimeCast = (std::chrono::high_resolution_clock::now() - previousTime);
-        previousTime = std::chrono::high_resolution_clock::now();
-        timeSinceLastFrame += std::chrono::duration_cast<std::chrono::milliseconds>(deltaTimeCast);
+        double fps = 0.0f;
+        std::chrono::duration<double, std::milli> frameTime = std::chrono::high_resolution_clock::now() - currentTime;
+        currentTime = std::chrono::high_resolution_clock::now();
+        frameLag += std::chrono::duration_cast<std::chrono::nanoseconds>(frameTime);
 
-        deltaTime = deltaTimeCast.count();
+        deltaTime = frameTime.count() / 1000.0f;
 
         // continuously run our input handler
         input.updateInput(isRunning);
@@ -262,10 +263,11 @@ int main(int argc, char* args[])
         }
 
         // here is our fixed update loop. if the time since last frame took longer than the fixed update rate, then we subtract the fixed update time until it is satisfactory
-        while (timeSinceLastFrame >= fixedUpdateTime)
+        while (frameLag >= fixedTimestep)
         {
             // fixed update
-            timeSinceLastFrame -= fixedUpdateTime;
+            frameLag -= fixedTimestep;
+            std::cout << "fixed" << std::endl;
         }
 
         // here are the openGL commands
@@ -349,6 +351,10 @@ int main(int argc, char* args[])
         // swap the SDL front and back buffers
         SDL_GL_SetSwapInterval(0);
         SDL_GL_SwapWindow(window);
+
+        //std::cout << deltaTime << std::endl;
+        fps = (frameTime.count() > 0) ? 1000.0f / frameTime.count() : 0.0f;
+        std::cout << "FPS: " << fps << std::endl;
     }
 
     // here we clear all the data we are using

@@ -9,6 +9,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <imgui.h>
+#include <imgui_impl_opengl3.h>
 
 #include "Shader.h"
 #include "InputHandler.h"
@@ -54,6 +56,19 @@ int main(int argc, char* args[])
     // hand the opengl context over to SDL
     SDL_GLContext glContext = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, glContext);
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplSDL3_InitForOpenGL(window, glContext);
+    ImGui_ImplOpenGL3_Init();
+
+
 
     // make sure all OpenGL extensions can be accessed, otherwise, close
     // this dangerous cast is to stay within C++ standards, but should be changed if undefined behavior occurs
@@ -180,7 +195,8 @@ int main(int argc, char* args[])
     double deltaTime = 0.0f;
 
     // tell SDL to capture our mouse and report motion even at the window edges
-    SDL_SetWindowRelativeMouseMode(window, true);
+    //SDL_SetWindowRelativeMouseMode(window, true);
+    //SDL_ShowCursor();
 
     camera.setMouseSensitivity(300.0f);
 
@@ -197,6 +213,10 @@ int main(int argc, char* args[])
 
         // continuously run our input handler
         input.updateInput(isRunning);
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL3_NewFrame();
+        ImGui::NewFrame();
 
         if (input.usingGamepad())
         {
@@ -226,6 +246,16 @@ int main(int argc, char* args[])
             {
                 std::cout << "South Button Pressed!" << '\n';
             }
+        }
+
+        if (input.isKeyHeld(KEY_LSHIFT))
+        {
+            SDL_ShowCursor();
+            SDL_SetWindowRelativeMouseMode(window, false);
+        } else
+        {
+            SDL_HideCursor();
+            SDL_SetWindowRelativeMouseMode(window, true);
         }
 
         if (input.getLastUsedDevice() == 1 || input.getLastUsedDevice() == 2)
@@ -347,20 +377,32 @@ int main(int argc, char* args[])
         glBindVertexArray(lightVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
+        fps = (frameTime.count() > 0) ? 1000.0f / frameTime.count() : 0.0f;
+        std::cout << "FPS: " << fps << std::endl;
+        std::stringstream ss;
+        ss << fps;
+
+        ImGui::Begin("FPS");
+        ImGui::Text(ss.str().c_str());
+        ImGui::End();
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         // disable vsync
         // swap the SDL front and back buffers
         SDL_GL_SetSwapInterval(0);
         SDL_GL_SwapWindow(window);
-
-        //std::cout << deltaTime << std::endl;
-        fps = (frameTime.count() > 0) ? 1000.0f / frameTime.count() : 0.0f;
-        std::cout << "FPS: " << fps << std::endl;
     }
 
     // here we clear all the data we are using
     glDeleteVertexArrays(1, &cubeVAO);
     glDeleteVertexArrays(1, &lightVAO);
     glDeleteBuffers(1, &cubeVBO);
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
+    ImGui::DestroyContext();
 
     // we destroy all sdl resources
     SDL_DestroyWindow(window);

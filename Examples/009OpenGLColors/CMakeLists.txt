@@ -16,6 +16,10 @@ if (UNIX AND APPLE)
 endif(UNIX AND APPLE)
 
 add_executable(009OpenGLColors "009 OpenGL Colors.cpp" "Shader.cpp" "Shader.h" ../../3rdparty/glad/src/gl.c
+        ../../3rdparty/imgui/backends/imgui_impl_sdl3.cpp
+        ../../3rdparty/imgui/backends/imgui_impl_sdl3.h
+        ../../3rdparty/imgui/backends/imgui_impl_opengl3.cpp
+        ../../3rdparty/imgui/backends/imgui_impl_opengl3.h
         InputHandler.cpp
         InputHandler.h
         Camera.cpp
@@ -23,9 +27,10 @@ add_executable(009OpenGLColors "009 OpenGL Colors.cpp" "Shader.cpp" "Shader.h" .
         Scancodes.h
 )
 
-target_include_directories(009OpenGLColors PRIVATE ../../3rdparty/sdl/include ../../3rdparty/glad/include ../../3rdparty/glm ../../3rdparty/stb )
 
-target_link_libraries(009OpenGLColors PRIVATE SDL3::SDL3)
+target_include_directories(009OpenGLColors PRIVATE ../../3rdparty/sdl/include ../../3rdparty/glad/include ../../3rdparty/glm ../../3rdparty/stb ../../3rdparty/imgui ../../3rdparty/imgui/backends )
+
+target_link_libraries(009OpenGLColors PRIVATE SDL3::SDL3 imgui)
 
 add_custom_command(TARGET 009OpenGLColors PRE_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory

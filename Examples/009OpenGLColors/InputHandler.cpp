@@ -174,6 +174,8 @@ void InputHandler::updateInput(bool& isRunning)
     // poll sdl events
     while (SDL_PollEvent(&e))
     {
+        ImGui_ImplSDL3_ProcessEvent(&e);
+
         switch (e.type)
         {
             // set the program's while loop to begin shutdown if the x is clicked

@@ -20,7 +20,7 @@
 #define WINDOW_HEIGHT 600
 #define WINDOW_WIDTH 800
 
-#define UPDATE_TIME_IN_FPS 60.0f
+#define UPDATE_TIME_IN_FPS 100.0f
 
 // useful functions that interface with SDL
 void framebufferCallback(int width, int height);
@@ -185,7 +185,7 @@ int main(int argc, char* args[])
     bool isMaximized = false;
 
     // get all the data necessary to have a fixed update loop and a non-fixed update loop
-    std::chrono::duration<double, std::milli> deltaTimeChronoDuration{};
+    std::chrono::duration<double, std::milli> frameTime{};
     std::chrono::duration<double, std::milli> fixedTimestep(1000.0f / UPDATE_TIME_IN_FPS);
     std::chrono::duration<double, std::milli> frameLag(0);
 
@@ -197,16 +197,17 @@ int main(int argc, char* args[])
     int fps = 0;
     double deltaTime = 0;
     int totalFramesSinceASecondElapses = 0;
+    double totalDeltaTimePerSecond = 0.0f;
 
     // while(running) loop is for all rendering and OpenGL code
     while(isRunning)
     {
         // get the time in milliseconds and reset the initial time counter, then get the time since last frame in milliseconds
-        deltaTimeChronoDuration = std::chrono::high_resolution_clock::now() - currentTime;
+        frameTime = std::chrono::high_resolution_clock::now() - currentTime;
         currentTime = std::chrono::high_resolution_clock::now();
-        frameLag += std::chrono::duration_cast<std::chrono::milliseconds>(deltaTimeChronoDuration);
+        frameLag += std::chrono::duration_cast<std::chrono::milliseconds>(frameTime);
 
-        deltaTime = deltaTimeChronoDuration.count();
+        deltaTime = frameTime.count();
 
         // continuously run our input handler
         input.updateInput(isRunning);
@@ -373,17 +374,16 @@ int main(int argc, char* args[])
         glBindVertexArray(lightVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        double totalDeltaTimePerSecond = 0.0f;
-
         totalDeltaTimePerSecond += deltaTime;
 
         currentTimePointForFPS = std::chrono::high_resolution_clock::now();
 
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(currentTimePointForFPS - previousTimePointForFPS).count() >= 1000)
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(currentTimePointForFPS - previousTimePointForFPS) >= std::chrono::seconds{1})
         {
-            fps = static_cast<int>(totalDeltaTimePerSecond * static_cast<double>(totalFramesSinceASecondElapses) / 1000.0f);
+            fps = static_cast<int>(static_cast<double>(totalFramesSinceASecondElapses) / totalDeltaTimePerSecond * std::chrono::duration<double, std::milli>(1000).count());
 
             totalFramesSinceASecondElapses = 0;
+            totalDeltaTimePerSecond = 0.0f;
 
             previousTimePointForFPS = std::chrono::high_resolution_clock::now();
         }

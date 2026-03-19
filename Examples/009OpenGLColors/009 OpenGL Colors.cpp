@@ -16,18 +16,18 @@
 #include "InputHandler.h"
 #include "Camera.h"
 
-// constants for window size at the beginning of the program
-#define WINDOW_HEIGHT 600
-#define WINDOW_WIDTH 800
-
-#define UPDATE_TIME_IN_FPS 60.0f
-
 // useful functions that interface with SDL
 void framebufferCallback(int width, int height);
 
 // arguments in main are required so SDL_main doesn't cause compilation issues
 int main(int argc, char* args[])
 {
+    // constants for window size at the beginning of the program
+    constexpr int WINDOW_HEIGHT = 600;
+    constexpr int WINDOW_WIDTH = 800;
+
+    constexpr double UPDATE_TIME_IN_FPS = 100.0f;
+
     // beginning variables for both naming the window and the only variable that should be changed if the program needs to be shut down.
     const std::string title = "009 OpenGL Colors";
     bool isRunning = false;
@@ -35,9 +35,9 @@ int main(int argc, char* args[])
     // set up SDL to begin its video subsystems and set the opengl attributes to avoid this program running on unsupported hardware
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD);
 
-    SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 3 );
-    SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 3 );
-    SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
     // create the window pointer, beginning around the middle of the screen with the dimension constants and the opengl flag
     SDL_Window* window = SDL_CreateWindow(title.c_str(), WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
@@ -46,7 +46,7 @@ int main(int argc, char* args[])
     SDL_SetWindowResizable(window, true);
 
     // make sure window exists
-    if(window == nullptr)
+    if(!window)
     {
         std::cout << "Failed to create window" << std::endl;
         SDL_Quit();
@@ -68,12 +68,8 @@ int main(int argc, char* args[])
     ImGui_ImplSDL3_InitForOpenGL(window, glContext);
     ImGui_ImplOpenGL3_Init();
 
-
-
     // make sure all OpenGL extensions can be accessed, otherwise, close
-    // this dangerous cast is to stay within C++ standards, but should be changed if undefined behavior occurs
-    int version = gladLoadGL(reinterpret_cast<GLADloadfunc>(SDL_GL_GetProcAddress));
-    if(version == 0)
+    if(!gladLoadGL(SDL_GL_GetProcAddress))
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return EXIT_FAILURE;
@@ -176,8 +172,8 @@ int main(int argc, char* args[])
 
     // create our camera and set necessary data
     Camera camera;
-    constexpr float cameraSpeed = 7.5f;
-    camera.setCameraSpeed(cameraSpeed);
+    camera.setCameraSpeed(7.5f);
+    camera.setMouseSensitivity(30.0f);
 
     float xAxis;
     float yAxis;
@@ -189,27 +185,33 @@ int main(int argc, char* args[])
     bool isMaximized = false;
 
     // get all the data necessary to have a fixed update loop and a non-fixed update loop
+    std::chrono::duration<double, std::milli> frameTime{};
     std::chrono::duration<double, std::milli> fixedTimestep(1000.0f / UPDATE_TIME_IN_FPS);
-    std::chrono::duration<double, std::nano> frameLag(0);
-    std::chrono::time_point<std::chrono::steady_clock> currentTime = std::chrono::high_resolution_clock::now();
-    double deltaTime = 0.0f;
+    std::chrono::duration<double, std::milli> frameLag(0);
+
+    std::chrono::time_point<std::chrono::high_resolution_clock> currentTime = std::chrono::high_resolution_clock::now();
+
+    std::chrono::time_point<std::chrono::high_resolution_clock> previousTimePointForFPS = std::chrono::high_resolution_clock::now();
+    std::chrono::time_point<std::chrono::high_resolution_clock> currentTimePointForFPS {};
+
+    int fps = 0;
+    double deltaTime = 0;
+    int totalFramesSinceASecondElapses = 0;
+    double totalDeltaTimePerSecond = 0.0f;
 
     // tell SDL to capture our mouse and report motion even at the window edges
     //SDL_SetWindowRelativeMouseMode(window, true);
     //SDL_ShowCursor();
 
-    camera.setMouseSensitivity(300.0f);
-
     // while(running) loop is for all rendering and OpenGL code
     while(isRunning)
     {
         // get the time in nanoseconds and reset the initial time counter, then get the time since last frame in milliseconds
-        double fps = 0.0f;
-        std::chrono::duration<double, std::milli> frameTime = std::chrono::high_resolution_clock::now() - currentTime;
+        frameTime = std::chrono::high_resolution_clock::now() - currentTime;
         currentTime = std::chrono::high_resolution_clock::now();
-        frameLag += std::chrono::duration_cast<std::chrono::nanoseconds>(frameTime);
+        frameLag += std::chrono::duration_cast<std::chrono::milliseconds>(frameTime);
 
-        deltaTime = frameTime.count() / 1000.0f;
+        deltaTime = frameTime.count();
 
         // continuously run our input handler
         input.updateInput(isRunning);
@@ -297,7 +299,6 @@ int main(int argc, char* args[])
         {
             // fixed update
             frameLag -= fixedTimestep;
-            std::cout << "fixed" << std::endl;
         }
 
         // here are the openGL commands
@@ -377,13 +378,22 @@ int main(int argc, char* args[])
         glBindVertexArray(lightVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        fps = (frameTime.count() > 0) ? 1000.0f / frameTime.count() : 0.0f;
-        std::cout << "FPS: " << fps << std::endl;
-        std::stringstream ss;
-        ss << fps;
+        totalDeltaTimePerSecond += deltaTime;
+
+        currentTimePointForFPS = std::chrono::high_resolution_clock::now();
+
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(currentTimePointForFPS - previousTimePointForFPS) >= std::chrono::seconds{1})
+        {
+            fps = static_cast<int>(static_cast<double>(totalFramesSinceASecondElapses) / totalDeltaTimePerSecond * std::chrono::duration<double, std::milli>(1000).count());
+
+            totalFramesSinceASecondElapses = 0;
+            totalDeltaTimePerSecond = 0.0f;
+
+            previousTimePointForFPS = std::chrono::high_resolution_clock::now();
+        }
 
         ImGui::Begin("FPS");
-        ImGui::Text(ss.str().c_str());
+        ImGui::Text("FPS: %i", fps);
         ImGui::End();
 
         ImGui::Render();
@@ -393,6 +403,8 @@ int main(int argc, char* args[])
         // swap the SDL front and back buffers
         SDL_GL_SetSwapInterval(0);
         SDL_GL_SwapWindow(window);
+
+        ++totalFramesSinceASecondElapses;
     }
 
     // here we clear all the data we are using

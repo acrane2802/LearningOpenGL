@@ -53,10 +53,10 @@ public:
     void setPitchMax(float pitchMax) { m_pitchMax = pitchMax; }
 
     [[nodiscard]] float getMouseSensitivity() const { return m_mouseSensitivity; }
-    void setMouseSensitivity(float mouseSensitivity) { m_mouseSensitivity = mouseSensitivity / 100000.0f; }
+    void setMouseSensitivity(float mouseSensitivity) { m_mouseSensitivity = mouseSensitivity; }
 
     [[nodiscard]] float getCameraSpeed() const { return m_speed; }
-    void setCameraSpeed(float cameraSpeed) { m_speed = cameraSpeed; }
+    void setCameraSpeed(float cameraSpeed) { m_speed = cameraSpeed / 1000.0f; }
 private:
     // this is the position in world space, the target to look at, and we get the direction vector by subtracting the target from the position, creating our z-axis
     glm::vec3 m_cameraPos = glm::vec3(0.0f, 0.0f,  3.0f);

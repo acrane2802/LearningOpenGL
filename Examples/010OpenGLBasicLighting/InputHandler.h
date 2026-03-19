@@ -6,6 +6,7 @@
 #include <vector>
 #include <cstring>
 #include <glad/gl.h>
+#include <algorithm>
 #include <imgui_impl_sdl3.h>
 
 #include "Scancodes.h"

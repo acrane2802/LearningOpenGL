@@ -8,16 +8,13 @@
 
 #include "Shader.h"
 
-// constants for window size at the beginning of the program
-#define WINDOW_HEIGHT 600
-#define WINDOW_WIDTH 800
-
-// useful functions that interface with SDL
-void framebufferCallback(SDL_Window* window, int width, int height);
-
 // arguments in main are required so SDL_main doesn't cause compilation issues
 int main(int argc, char* args[])
 {
+    // constants for window size at the beginning of the program
+    constexpr int WINDOW_HEIGHT = 600;
+    constexpr int WINDOW_WIDTH = 800;
+
     // beginning variables for both naming the window and the only variable that should be changed if the program needs to be shut down.
     const std::string title = "005 OpenGL Textures Exercises";
     bool isRunning = false;
@@ -25,9 +22,9 @@ int main(int argc, char* args[])
     // set up SDL to begin its video subsystems and set the opengl attributes to avoid this program running on unsupported hardware
     SDL_Init(SDL_INIT_VIDEO);
 
-    SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 3 );
-    SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 3 );
-    SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
     // create the window pointer, beginning around the middle of the screen with the dimension constants and the opengl flag
     SDL_Window* window = SDL_CreateWindow(title.c_str(), WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
@@ -36,7 +33,7 @@ int main(int argc, char* args[])
     SDL_SetWindowResizable(window, true);
 
     // make sure window exists
-    if(window == nullptr)
+    if(!window)
     {
         std::cout << "Failed to create window" << std::endl;
         SDL_Quit();
@@ -48,9 +45,7 @@ int main(int argc, char* args[])
     SDL_GL_MakeCurrent(window, glContext);
 
     // make sure all OpenGL extensions can be accessed, otherwise, close
-    // this dangerous cast is to stay within C++ standards, but should be changed if undefined behavior occurs
-    int version = gladLoadGL(reinterpret_cast<GLADloadfunc>(SDL_GL_GetProcAddress));
-    if(version == 0)
+    if(!gladLoadGL(SDL_GL_GetProcAddress))
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return EXIT_FAILURE;
@@ -208,7 +203,7 @@ int main(int argc, char* args[])
                     isRunning = false;
                     break;
                 case SDL_EVENT_WINDOW_RESIZED:
-                        framebufferCallback(window, SDL_GetWindowSurface(window)->w,  SDL_GetWindowSurface(window)->h);
+                    glViewport(0, 0, SDL_GetWindowSurface(window)->w,  SDL_GetWindowSurface(window)->h);
                     break;
                 case SDL_EVENT_KEY_DOWN:
                     switch(e.key.key)
@@ -255,10 +250,4 @@ int main(int argc, char* args[])
     SDL_GL_DestroyContext(glContext);
     SDL_Quit();
     return 0;
-}
-
-// this resizes the viewport so opengl can adapt dynamically
-void framebufferCallback(SDL_Window* window, int width, int height)
-{
-    glViewport(0, 0, width, height);
 }

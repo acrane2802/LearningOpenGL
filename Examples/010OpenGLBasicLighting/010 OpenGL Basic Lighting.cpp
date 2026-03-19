@@ -16,18 +16,15 @@
 #include "InputHandler.h"
 #include "Camera.h"
 
-// constants for window size at the beginning of the program
-#define WINDOW_HEIGHT 600
-#define WINDOW_WIDTH 800
-
-#define UPDATE_TIME_IN_FPS 100.0f
-
-// useful functions that interface with SDL
-void framebufferCallback(int width, int height);
-
 // arguments in main are required so SDL_main doesn't cause compilation issues
 int main(int argc, char* args[])
 {
+    // constants for window size at the beginning of the program
+    constexpr int WINDOW_HEIGHT = 600;
+    constexpr int WINDOW_WIDTH = 800;
+
+    constexpr double UPDATE_TIME_IN_FPS = 100.0f;
+
     // beginning variables for both naming the window and the only variable that should be changed if the program needs to be shut down.
     const std::string title = "010 OpenGL Basic Lighting";
     bool isRunning = false;
@@ -35,9 +32,9 @@ int main(int argc, char* args[])
     // set up SDL to begin its video subsystems and set the opengl attributes to avoid this program running on unsupported hardware
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD);
 
-    SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 3 );
-    SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 3 );
-    SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
     // create the window pointer, beginning around the middle of the screen with the dimension constants and the opengl flag
     SDL_Window* window = SDL_CreateWindow(title.c_str(), WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
